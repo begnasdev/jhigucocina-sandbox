@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "purpose": "Sample menu categories + items (architecture §4.3).",
+    "explanation": "Compatible with the EXISTING menu shape (name/price/available) plus the additive fields (categoryId, recipeRef, tags, priceMinor, stationId). recipeRef/ingredient ids line up with inventory.json so later sprints can wire recipes.",
+    "deployment": "seed/seed.mjs into providers/{id}/menuCategories and /menu. Dev/local."
+  },
+  "categories": [
+    { "id": "cat_tacos", "name": "Tacos", "slug": "tacos", "sortOrder": 10, "active": true },
+    { "id": "cat_drinks", "name": "Drinks", "slug": "drinks", "sortOrder": 20, "active": true }
+  ],
+  "items": [
+    {
+      "id": "menu_alpastor",
+      "name": "Al Pastor Taco",
+      "price": 4.5,
+      "priceMinor": 450,
+      "available": true,
+      "description": "Marinated pork, pineapple, cilantro",
+      "categoryId": "cat_tacos",
+      "tags": ["pork", "spicy", "popular"],
+      "stationId": "grill",
+      "recipeRef": "providers/jhigucocina/recipes/rec_alpastor",
+      "dietary": { "vegetarian": false, "vegan": false, "glutenFree": true },
+      "sortOrder": 10
+    },
+    {
+      "id": "menu_horchata",
+      "name": "Horchata",
+      "price": 3.0,
+      "priceMinor": 300,
+      "available": true,
+      "description": "Rice-cinnamon agua fresca",
+      "categoryId": "cat_drinks",
+      "tags": ["vegan", "cold"],
+      "stationId": "cold",
+      "recipeRef": null,
+      "dietary": { "vegetarian": true, "vegan": true, "glutenFree": true },
+      "sortOrder": 10
+    }
+  ]
+}

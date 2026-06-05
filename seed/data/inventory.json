@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "purpose": "Sample raw ingredients + their inventory cache docs (architecture §4.5, §4.6).",
+    "explanation": "Seeds a few stockable raw ingredients and their matching inventory/{itemId} cache (itemId === ingredientId). NOTE: stockMovements ledger entries are intentionally NOT seeded — they are Function-only and append-only; onHand here is a seed baseline that the reconciler treats as an opening count. This keeps the seed consistent with the Function-only ledger rule.",
+    "deployment": "seed/seed.mjs into providers/{id}/rawIngredients and /inventory. Dev/local."
+  },
+  "rawIngredients": [
+    {
+      "id": "ing_cilantro", "name": "Cilantro", "category": "produce",
+      "baseUnit": "g", "purchaseUnit": "bunch", "conversion": { "purchaseToBase": 30 },
+      "preferredVendorId": "vendor_fresh",
+      "costCache": { "perBaseUnitMinor": 1 },
+      "reorder": { "parLevel": 1500, "reorderPoint": 500, "reorderQty": 3000 },
+      "active": true
+    },
+    {
+      "id": "ing_pineapple", "name": "Pineapple", "category": "produce",
+      "baseUnit": "g", "purchaseUnit": "each", "conversion": { "purchaseToBase": 900 },
+      "preferredVendorId": "vendor_fresh",
+      "costCache": { "perBaseUnitMinor": 1 },
+      "reorder": { "parLevel": 5000, "reorderPoint": 1800, "reorderQty": 9000 },
+      "active": true
+    },
+    {
+      "id": "ing_pork", "name": "Pork Shoulder", "category": "protein",
+      "baseUnit": "g", "purchaseUnit": "kg", "conversion": { "purchaseToBase": 1000 },
+      "preferredVendorId": "vendor_meat",
+      "costCache": { "perBaseUnitMinor": 1 },
+      "reorder": { "parLevel": 20000, "reorderPoint": 8000, "reorderQty": 30000 },
+      "active": true
+    }
+  ],
+  "inventory": [
+    { "itemId": "ing_cilantro",  "itemKind": "raw", "baseUnit": "g", "onHand": 820,   "reserved": 0, "available": 820,   "lowStock": false },
+    { "itemId": "ing_pineapple", "itemKind": "raw", "baseUnit": "g", "onHand": 3600,  "reserved": 0, "available": 3600,  "lowStock": false },
+    { "itemId": "ing_pork",      "itemKind": "raw", "baseUnit": "g", "onHand": 15000, "reserved": 0, "available": 15000, "lowStock": false }
+  ],
+  "vendors": [
+    { "id": "vendor_fresh", "name": "Fresh Produce Co.", "active": true, "leadTimeDays": 2, "terms": { "paymentDays": 30, "minimumOrderMinor": 5000 } },
+    { "id": "vendor_meat", "name": "Sierra Meats", "active": true, "leadTimeDays": 3, "terms": { "paymentDays": 30, "minimumOrderMinor": 10000 } }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "purpose": "Sample auth users + Firestore user docs, one per role (architecture §4.2).",
+    "explanation": "Gives every role a known login for local testing. seed.mjs creates the Auth user (emulator), sets custom claims {providerId, role} (the same claims fnClaimsSync sets), and writes the matching providers/{id}/users/{uid} doc. Passwords are emulator-only.",
+    "deployment": "seed/seed.mjs, dev/local only. NEVER seed users into production."
+  },
+  "password": "Passw0rd!",
+  "users": [
+    { "uid": "seed_admin",    "email": "admin@jhigucocina.test",    "role": "admin",    "displayName": "Ada Admin" },
+    { "uid": "seed_manager",  "email": "manager@jhigucocina.test",  "role": "manager",  "displayName": "Marco Manager" },
+    { "uid": "seed_staff",    "email": "staff@jhigucocina.test",    "role": "staff",    "displayName": "Sam Staff", "staff": { "assignedStationIds": ["grill"], "pin": null } },
+    { "uid": "seed_customer", "email": "customer@jhigucocina.test", "role": "customer", "displayName": "Carla Customer" }
+  ]
+}

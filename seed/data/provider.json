@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "purpose": "Sample tenant config doc for providers/jhigucocina (architecture §4.1).",
+    "explanation": "Deterministic provider so every local/dev run starts from a known tenant. Loyalty/tax values are [PRD-TBD] defaults the schema can absorb.",
+    "deployment": "Loaded by seed/seed.mjs into providers/{id}. Dev/local only."
+  },
+  "providerId": "jhigucocina",
+  "name": "Jhigu Cocina",
+  "slug": "jhigu-cocina",
+  "status": "active",
+  "locale": { "currency": "USD", "timezone": "America/Los_Angeles", "language": "en" },
+  "tax": { "model": "exclusive", "defaultRatePct": 8.5 },
+  "service": { "channels": ["dine_in", "qr", "pickup"], "dineInEnabled": true, "qrOrderingEnabled": true },
+  "loyalty": { "enabled": true, "earnRatePointsPerCurrency": 1, "redeemValuePerPoint": 0.01 },
+  "branding": { "logoUrl": null, "primaryColor": "#B5121B" }
+}
