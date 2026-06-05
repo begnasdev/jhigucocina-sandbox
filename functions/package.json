@@ -1,0 +1,35 @@
+{
+  "name": "jhigucocina-functions",
+  "version": "0.1.0",
+  "description": "JhiguCocina Cloud Functions (Sprint 1 platform scaffold — no business logic yet).",
+  "//": "PURPOSE: deployable Cloud Functions package. EXPLANATION: Node 20 + TS + Functions v2 per Document D §1. DEPLOYMENT: `npm run build` then `firebase deploy --only functions --project <alias>`.",
+  "type": "module",
+  "main": "lib/index.js",
+  "engines": { "node": "20" },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "lint": "eslint --ext .ts src",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "test": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:rules": "vitest run test/rules",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "@types/node": "^20.14.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "private": true
+}

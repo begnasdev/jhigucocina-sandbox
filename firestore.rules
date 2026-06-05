@@ -1,0 +1,302 @@
+rules_version = '2';
+
+// =============================================================================
+// PURPOSE
+//   Production Firestore security rules for JhiguCocina (Sprint 1 baseline).
+//   Implements the access matrix and invariants from:
+//     - firestore-architecture.md §6 (Security Rule Strategy)
+//     - C-workflow-architecture.md   (server-authoritative transitions)
+//
+// EXPLANATION
+//   Defense in depth (architecture §6): tenant isolation is STRUCTURAL (the
+//   provider id is in every path) and rules are the second line of defense.
+//
+//   Identity comes from Auth CUSTOM CLAIMS { providerId, role } set by the
+//   fnClaimsSync function. Using claims (not a Firestore lookup) makes every
+//   authorization check O(1) with no extra read.
+//
+//   Core invariants enforced here:
+//     1. Tenant pinning — a token for tenant A can never touch tenant B.
+//     2. Role-escalation prevention — customers cannot change role/providerId.
+//     3. Order integrity — customers create + read own orders but cannot mutate
+//        status/pricing/timeline (those are server-authoritative).
+//     4. Ledgers are append-only and FUNCTION-ONLY (Admin SDK bypasses rules):
+//        clients can never write stockMovements, loyalty transactions,
+//        orders_history, counters, analytics. Rules deny all client writes there.
+//     5. Immutability — movement/transaction docs reject update & delete.
+//
+//   NOTE: Cloud Functions use the Admin SDK, which BYPASSES these rules. So
+//   "Function only" is expressed as "deny all client writes"; the Functions
+//   still write freely server-side.
+//
+// DEPLOYMENT
+//   Test first:  npm --prefix functions run test:rules   (emulator-based)
+//   Deploy:      firebase deploy --only firestore:rules --project <dev|staging|prod>
+//   Deploy order (Document D §10): indexes -> rules -> functions -> hosting.
+// =============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper predicates (claims-based; see architecture §6.2)
+    // ----------------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function claims() {
+      return request.auth.token;
+    }
+    function sameProvider(pid) {
+      return signedIn() && claims().providerId == pid;
+    }
+    function hasRole(pid, role) {
+      return sameProvider(pid) && claims().role == role;
+    }
+    function isStaffPlus(pid) {
+      return sameProvider(pid) && claims().role in ['staff', 'manager', 'admin'];
+    }
+    function isManagerPlus(pid) {
+      return sameProvider(pid) && claims().role in ['manager', 'admin'];
+    }
+    function isAdmin(pid) {
+      return hasRole(pid, 'admin');
+    }
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    // True when the incoming write does NOT change a protected field.
+    function unchanged(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == resource.data[field];
+    }
+
+    // ======================================================================
+    // GLOBAL (cross-tenant) collections
+    // ======================================================================
+
+    // userIndex: bootstrap uid -> provider/role lookup before claims are known.
+    // Owner-read only; written by fnClaimsSync (Admin SDK).
+    match /userIndex/{uid} {
+      allow read: if isSelf(uid);
+      allow write: if false;
+    }
+
+    // providerDirectory: public discovery (name, slug, status). Read-only client.
+    match /providerDirectory/{providerId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ======================================================================
+    // TENANT ROOT
+    // ======================================================================
+    match /providers/{pid} {
+
+      // Provider config doc: any signed-in member of the tenant can read;
+      // only admins (via client) may edit non-critical fields. Onboarding /
+      // status changes are done server-side.
+      allow read: if sameProvider(pid);
+      allow create: if false;                       // provisioned server-side
+      allow update: if isAdmin(pid);
+      allow delete: if false;
+
+      // ------------------------------------------------------------------
+      // USERS  (existing collection; architecture §4.2)
+      // ------------------------------------------------------------------
+      match /users/{uid} {
+        allow read: if isSelf(uid) || isManagerPlus(pid);
+
+        // Self-signup creates a customer record (matches authService.js).
+        // Role/providerId are forced to safe values.
+        allow create: if isSelf(uid)
+                      && request.resource.data.role == 'customer'
+                      && request.resource.data.providerId == pid;
+
+        // Self may edit own profile but NOT role/providerId (escalation guard).
+        // Managers/admins may change role.
+        allow update: if (isSelf(uid) && unchanged('role') && unchanged('providerId'))
+                      || isManagerPlus(pid);
+
+        allow delete: if isAdmin(pid);
+      }
+
+      // ------------------------------------------------------------------
+      // MENU + CATEGORIES + MODIFIER GROUPS
+      // Public-readable (customer + QR surface). Managers manage.
+      // ------------------------------------------------------------------
+      match /menuCategories/{categoryId} {
+        allow read: if true;
+        allow write: if isManagerPlus(pid);
+      }
+      match /menu/{menuItemId} {
+        allow read: if true;
+        allow write: if isManagerPlus(pid);
+
+        match /modifierGroups/{groupId} {
+          allow read: if true;
+          allow write: if isManagerPlus(pid);
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // RECIPES + INGREDIENTS  (back-of-house; staff read, manager write)
+      // ------------------------------------------------------------------
+      match /recipes/{recipeId} {
+        allow read: if isStaffPlus(pid);
+        allow write: if isManagerPlus(pid);
+      }
+      match /rawIngredients/{ingredientId} {
+        allow read: if isStaffPlus(pid);
+        allow write: if isManagerPlus(pid);
+      }
+      match /preparedIngredients/{prepId} {
+        allow read: if isStaffPlus(pid);
+        allow write: if isManagerPlus(pid);
+      }
+
+      // ------------------------------------------------------------------
+      // INVENTORY + STOCK MOVEMENTS  (LEDGER — Function only)
+      // ------------------------------------------------------------------
+      match /inventory/{itemId} {
+        allow read: if isStaffPlus(pid);
+        allow write: if false;                      // fnStockMovementApply only
+
+        match /stockMovements/{movementId} {
+          allow read: if isStaffPlus(pid);
+          allow write: if false;                    // append-only, immutable
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // VENDORS + PRICE LISTS
+      // ------------------------------------------------------------------
+      match /vendors/{vendorId} {
+        allow read: if isStaffPlus(pid);
+        allow write: if isManagerPlus(pid);
+
+        match /priceList/{ingredientId} {
+          allow read: if isStaffPlus(pid);
+          allow write: if isManagerPlus(pid);
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // PURCHASE ORDERS  (draft editable by manager; transitions server-side)
+      // ------------------------------------------------------------------
+      match /purchaseOrders/{poId} {
+        allow read: if isStaffPlus(pid);
+        // Managers may create/edit DRAFTs from the client; submit/receive go
+        // through fnPoTransition/fnPoReceive (Admin SDK).
+        allow create: if isManagerPlus(pid)
+                      && request.resource.data.status == 'draft';
+        allow update: if isManagerPlus(pid)
+                      && resource.data.status == 'draft';
+        allow delete: if isManagerPlus(pid)
+                      && resource.data.status == 'draft';
+      }
+
+      // ------------------------------------------------------------------
+      // PREP LINES + PREP TASKS
+      // ------------------------------------------------------------------
+      match /prepLines/{lineId} {
+        allow read: if isStaffPlus(pid);
+        allow write: if isManagerPlus(pid);
+      }
+      match /prepTasks/{taskId} {
+        allow read: if isStaffPlus(pid);
+        // Staff can create/edit board cards; status transitions that move stock
+        // (in_progress/done) are validated by fnPrepTaskTransition server-side.
+        allow create: if isStaffPlus(pid);
+        allow update: if isStaffPlus(pid);
+        allow delete: if isManagerPlus(pid);
+      }
+
+      // ------------------------------------------------------------------
+      // TABLES + SESSIONS + QR CODES (dine-in)
+      // ------------------------------------------------------------------
+      match /tables/{tableId} {
+        allow read: if isStaffPlus(pid);
+        allow write: if isStaffPlus(pid);
+
+        match /sessions/{sessionId} {
+          allow read: if isStaffPlus(pid);
+          allow write: if isStaffPlus(pid);
+        }
+      }
+      // QR codes: public read (scan -> resolve channel/table). Managers manage.
+      match /qrCodes/{qrId} {
+        allow read: if true;
+        allow write: if isManagerPlus(pid);
+      }
+
+      // ------------------------------------------------------------------
+      // ORDERS — ACTIVE  (existing). Create + own-read by client; status/
+      // pricing/timeline transitions are server-authoritative (fnOrderTransition).
+      // ------------------------------------------------------------------
+      match /orders_active/{orderId} {
+        allow read: if (signedIn() && resource.data.customerId == request.auth.uid)
+                    || isStaffPlus(pid);
+
+        // Customers (incl. validated anonymous QR) and staff may place orders.
+        // New orders must start in 'placed' and be owned by the creator.
+        allow create: if signedIn()
+                      && request.resource.data.status == 'placed'
+                      && request.resource.data.providerId == pid
+                      && (request.resource.data.customerId == request.auth.uid
+                          || isStaffPlus(pid));
+
+        // No client updates: all transitions go through Cloud Functions.
+        allow update: if false;
+        allow delete: if false;                     // moved to history server-side
+      }
+
+      // ORDERS — HISTORY (cold). Own-read / staff-read. Function-written only.
+      match /orders_history/{orderId} {
+        allow read: if (signedIn() && resource.data.customerId == request.auth.uid)
+                    || isStaffPlus(pid);
+        allow write: if false;
+      }
+
+      // ------------------------------------------------------------------
+      // LOYALTY  (LEDGER — Function only). Owner + staff read.
+      // ------------------------------------------------------------------
+      match /loyaltyAccounts/{uid} {
+        allow read: if isSelf(uid) || isStaffPlus(pid);
+        allow write: if false;                      // fnLoyalty* only
+
+        match /transactions/{txnId} {
+          allow read: if isSelf(uid) || isStaffPlus(pid);
+          allow write: if false;                    // append-only, immutable
+        }
+      }
+      // Reward catalog: public-readable (same provider). Managers manage.
+      match /rewardCatalog/{rewardId} {
+        allow read: if sameProvider(pid);
+        allow write: if isManagerPlus(pid);
+      }
+
+      // ------------------------------------------------------------------
+      // COUNTERS  (Function only — clients never read or write)
+      // ------------------------------------------------------------------
+      match /counters/{counterId} {
+        allow read, write: if false;
+      }
+
+      // ------------------------------------------------------------------
+      // ANALYTICS  (rollups: manager read, Function written)
+      // ------------------------------------------------------------------
+      match /analytics/{docId=**} {
+        allow read: if isManagerPlus(pid);
+        allow write: if false;
+      }
+    }
+
+    // ======================================================================
+    // DEFAULT DENY — anything not matched above is forbidden.
+    // ======================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

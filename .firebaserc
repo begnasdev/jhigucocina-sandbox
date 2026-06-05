@@ -1,0 +1,10 @@
+{
+  "projects": {
+    "default": "jhigucocina",
+    "dev": "jhigucocina-dev",
+    "staging": "jhigucocina-staging",
+    "prod": "jhigucocina"
+  },
+  "targets": {},
+  "etags": {}
+}

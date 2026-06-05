@@ -1,0 +1,50 @@
+rules_version = '2';
+
+// =============================================================================
+// PURPOSE
+//   Cloud Storage security rules for JhiguCocina. Sprint 1 baseline.
+//   Storage holds tenant assets only: menu/recipe images and provider branding.
+//
+// EXPLANATION
+//   Mirrors the Firestore tenant model (architecture doc §1): every object lives
+//   under providers/{providerId}/... so isolation is structural. Public read is
+//   allowed for menu/branding assets (the customer + QR surface needs them
+//   unauthenticated); writes require an authenticated user belonging to the same
+//   provider with a manager/admin claim. Role comes from Auth custom claims
+//   (set by fnClaimsSync), so no Firestore read is needed here.
+//
+//   Sprint 1 keeps this intentionally small — no business upload flows yet.
+//   Per-object validation (size/content-type) is added when the upload features land.
+//
+// DEPLOYMENT
+//   firebase deploy --only storage --project <dev|staging|prod>
+//   Test locally against the Storage emulator (port 9199) before deploying.
+// =============================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function sameProvider(pid) {
+      return signedIn() && request.auth.token.providerId == pid;
+    }
+    function isManagerPlus(pid) {
+      return sameProvider(pid) && request.auth.token.role in ['manager', 'admin'];
+    }
+
+    // Tenant-scoped assets (menu images, recipe images, branding).
+    match /providers/{providerId}/{allPaths=**} {
+      // Public read: customer app + QR guests need menu/branding without auth.
+      allow read: if true;
+      // Writes restricted to managers/admins of that tenant.
+      allow write: if isManagerPlus(providerId);
+    }
+
+    // Everything else is denied by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

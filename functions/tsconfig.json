@@ -1,0 +1,23 @@
+{
+  "//": "PURPOSE: TypeScript compiler config for the Functions package. EXPLANATION: strict ESM build to lib/ targeting Node 20 (Document D §1). DEPLOYMENT: invoked by `npm run build`; firebase.json predeploy runs lint+build before deploy.",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "outDir": "lib",
+    "rootDir": "src",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "lib", "test"]
+}
