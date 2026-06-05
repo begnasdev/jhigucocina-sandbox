@@ -30,7 +30,7 @@ export interface AuthedContext<T> {
   log: ReturnType<typeof createLogger>;
 }
 
-export interface GuardOptions<T> {
+export interface GuardOptions {
   schema?: ZodTypeAny;
   /** Minimum role required. Owner-checks are done inside the handler. */
   minRole?: Role;
@@ -40,20 +40,27 @@ export interface GuardOptions<T> {
 }
 
 const ROLE_RANK: Record<Role, number> = {
-  customer: 0, staff: 1, manager: 2, admin: 3,
+  customer: 0,
+  staff: 1,
+  manager: 2,
+  admin: 3,
 };
 
 /**
  * Compose a guarded onCall handler. Returns a function suitable for onCall().
  */
 export function guarded<T, R>(
-  opts: GuardOptions<T>,
+  opts: GuardOptions,
   handler: (ctx: AuthedContext<T>) => Promise<R>,
 ) {
   return async (req: CallableRequest): Promise<R> => {
     const correlationId =
       (req.data?.correlationId as string) ?? crypto.randomUUID();
-    const log = createLogger({ correlationId, workflow: opts.workflow });
+
+    const log = createLogger({
+      correlationId,
+      workflow: opts.workflow,
+    });
 
     try {
       // 1. App Check (anti-abuse). Enforced in staging/prod from Sprint 2.
@@ -63,40 +70,70 @@ export function guarded<T, R>(
       }
 
       // 2. Auth
-      if (!req.auth) throw new AuthzError("Authentication required");
+      if (!req.auth) {
+        throw new AuthzError("Authentication required");
+      }
+
       const token = req.auth.token as Record<string, unknown>;
       const uid = req.auth.uid;
       const providerId = String(token.providerId ?? "");
       const role = (token.role as Role) ?? "customer";
-      if (!providerId) throw new AuthzError("Missing provider claim");
+
+      if (!providerId) {
+        throw new AuthzError("Missing provider claim");
+      }
 
       // 3. Authz (role floor)
-      if (opts.minRole && ROLE_RANK[role] < ROLE_RANK[opts.minRole]) {
+      if (
+        opts.minRole !== undefined &&
+        ROLE_RANK[role] < ROLE_RANK[opts.minRole]
+      ) {
         throw new AuthzError(`Requires role >= ${opts.minRole}`);
       }
 
       // 4. Validation
       let data = req.data as T;
+
       if (opts.schema) {
         const parsed = opts.schema.safeParse(req.data);
+
         if (!parsed.success) {
-          throw new ValidationError("Invalid input", parsed.error.format());
+          throw new ValidationError(
+            "Invalid input",
+            parsed.error.format(),
+          );
         }
+
         data = parsed.data as T;
       }
 
       // 5. Idempotency — claimed inside the handler's transaction (Sprint 2+).
+
       // 6. Tracing
       const ctx: AuthedContext<T> = {
-        data, uid, providerId, role, correlationId,
-        log: log.child({ providerId, userUid: uid }),
+        data,
+        uid,
+        providerId,
+        role,
+        correlationId,
+        log: log.child({
+          providerId,
+          userUid: uid,
+        }),
       };
+
       ctx.log.info("callable.start");
+
       const result = await handler(ctx);
+
       ctx.log.info("callable.ok");
+
       return result;
     } catch (e) {
-      log.error("callable.error", { message: (e as Error).message });
+      log.error("callable.error", {
+        message: (e as Error).message,
+      });
+
       throw mapError(e);
     }
   };
