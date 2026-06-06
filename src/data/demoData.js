@@ -1,0 +1,100 @@
+export const demoMenuItems = [
+  {
+    id: "demo-momo",
+    name: "Jhol Momo",
+    description: "Steamed dumplings served in a warm sesame-tomato broth.",
+    category: "Nepali Favorites",
+    price: 12.5,
+    available: true,
+    prepLine: "Curries",
+    tags: ["popular", "comfort"],
+  },
+  {
+    id: "demo-choila",
+    name: "Chicken Choila",
+    description: "Char-grilled chicken tossed with mustard oil, herbs, and spice.",
+    category: "Starters",
+    price: 13.75,
+    available: true,
+    prepLine: "Tandoor",
+    tags: ["spicy"],
+  },
+  {
+    id: "demo-thali",
+    name: "Newari Khaja Set",
+    description: "Beaten rice, spiced potatoes, greens, achar, and roasted soybeans.",
+    category: "House Plates",
+    price: 18.25,
+    available: true,
+    prepLine: "Curries",
+    tags: ["signature"],
+  },
+  {
+    id: "demo-lassi",
+    name: "Mango Lassi",
+    description: "Creamy yogurt drink blended with mango and cardamom.",
+    category: "Beverage",
+    price: 5.5,
+    available: true,
+    prepLine: "Bar",
+    tags: ["cooling"],
+  },
+  {
+    id: "demo-pakora",
+    name: "Vegetable Pakora",
+    description: "Crisp seasonal vegetables with chickpea batter and mint sauce.",
+    category: "Starters",
+    price: 8.95,
+    available: true,
+    prepLine: "Tandoor",
+    tags: ["vegetarian"],
+  },
+  {
+    id: "demo-kheer",
+    name: "Saffron Kheer",
+    description: "Slow cooked rice pudding with saffron, pistachio, and rose.",
+    category: "Dessert",
+    price: 6.75,
+    available: true,
+    prepLine: "Desserts",
+    tags: ["sweet"],
+  },
+];
+
+export const demoOrders = [
+  {
+    id: "demo-1024",
+    status: "placed",
+    customerId: "walk-in-7",
+    pricing: { total: 31.25 },
+    timeline: { placedAt: { seconds: Math.floor(Date.now() / 1000) - 180 } },
+    items: [
+      { name: "Jhol Momo", quantity: 2, price: 12.5 },
+      { name: "Mango Lassi", quantity: 1, price: 5.5 },
+    ],
+  },
+  {
+    id: "demo-1023",
+    status: "preparing",
+    customerId: "table-4",
+    pricing: { total: 45.95 },
+    timeline: { placedAt: { seconds: Math.floor(Date.now() / 1000) - 720 } },
+    items: [
+      { name: "Newari Khaja Set", quantity: 2, price: 18.25 },
+      { name: "Vegetable Pakora", quantity: 1, price: 8.95 },
+    ],
+  },
+  {
+    id: "demo-1022",
+    status: "ready",
+    customerId: "online-2",
+    pricing: { total: 20.5 },
+    timeline: { placedAt: { seconds: Math.floor(Date.now() / 1000) - 980 } },
+    items: [
+      { name: "Chicken Choila", quantity: 1, price: 13.75 },
+      { name: "Saffron Kheer", quantity: 1, price: 6.75 },
+    ],
+  },
+];
+
+export const orderStatuses = ["placed", "accepted", "preparing", "ready", "completed"];
