@@ -42,12 +42,15 @@ export const registerUser = async (
       user.uid
     ),
     {
-      uid: user.uid,
-      email: user.email,
-      role: "customer",
-      providerId: "jhigucocina",
-      createdAt: serverTimestamp(),
-    }
+  uid: user.uid,
+  email: user.email,
+  displayName: user.displayName || "",
+  role: "customer",
+  active: true,
+  providerId: "jhigucocina",
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+}
   );
 
   return user;
@@ -82,9 +85,12 @@ export const loginWithGoogle = async () => {
     await setDoc(userRef, {
       uid: user.uid,
       email: user.email,
+      displayName: user.displayName || "",
       role: "customer",
+      active: true,
       providerId: "jhigucocina",
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
   }
 
