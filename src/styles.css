@@ -1749,3 +1749,638 @@ a.card:focus-visible,
 .kds-card.is-medium {
   border-left: 4px solid var(--gold);
 }
+
+/* =========================================================
+   PHASE 4B.1 — KDS NOTIFICATIONS
+   audio-unlock banner · new-order alert chips
+   ========================================================= */
+
+.kds-audio-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 16px;
+  margin: 0 0 14px;
+  border-radius: 12px;
+  background: rgba(214, 154, 45, 0.14);
+  border: 1px solid rgba(214, 154, 45, 0.35);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.kds-audio-banner:hover {
+  background: rgba(214, 154, 45, 0.22);
+}
+
+.kds-audio-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #fff;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.kds-audio-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.25;
+}
+
+.kds-audio-text strong {
+  font-weight: 800;
+  font-size: 0.98rem;
+}
+
+.kds-audio-text small {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+/* --- New-order alert chips --- */
+.kds-alerts {
+  position: fixed;
+  top: 84px;
+  right: 18px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 36px));
+  pointer-events: none;
+}
+
+.kds-alert {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.kds-alert-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.kds-alert-room {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.kds-alert-room.muted {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.kds-alert-dismiss {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.kds-alert-dismiss:hover {
+  background: rgba(31, 37, 34, 0.06);
+  color: var(--ink);
+}
+
+/* --- Responsive: tablet/mobile --- */
+@media (max-width: 900px) {
+  .kds-alerts {
+    top: 76px;
+    right: 12px;
+    left: 12px;
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@media (max-width: 560px) {
+  .kds-audio-banner {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .kds-audio-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .kds-audio-text strong {
+    font-size: 0.92rem;
+  }
+  .kds-alerts {
+    top: auto;
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+  }
+}
+
+/* =========================================================
+   PHASE 4B.2 — SOUND CHIP + MOBILE QUICK-NAV TABS
+   ========================================================= */
+
+/* --- Sound status chip below metrics --- */
+.kds-sound-status {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 14px;
+}
+
+.kds-sound-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.kds-sound-pill.is-on {
+  background: rgba(35, 122, 87, 0.14);
+  color: var(--success);
+}
+
+.kds-sound-pill.is-off {
+  background: rgba(214, 154, 45, 0.18);
+  color: #8a5e0d;
+}
+
+/* --- Mobile quick-nav tabs --- */
+/* Desktop / tablet: hidden — board navigation is direct. */
+.kds-tabs {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .kds-tabs {
+    position: sticky;
+    top: 56px; /* sits below the sticky navbar */
+    z-index: 5;
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 6px 2px 8px;
+    margin: 0 0 12px;
+    background: linear-gradient(180deg, rgba(247, 243, 235, 0.96), rgba(247, 243, 235, 0.92));
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .kds-tab {
+    flex: 1 0 auto;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    min-height: 40px;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+
+  .kds-tab:hover {
+    background: rgba(31, 37, 34, 0.04);
+  }
+
+  .kds-tab-label {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.78rem;
+  }
+
+  .kds-tab-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(31, 37, 34, 0.08);
+    color: var(--ink);
+    font-size: 0.74rem;
+    font-weight: 800;
+  }
+
+  /* Per-lane accent stripes match the column header colors. */
+  .kds-tab-new       { border-top: 2px solid #d69a2d; }
+  .kds-tab-preparing { border-top: 2px solid var(--accent); }
+  .kds-tab-ready     { border-top: 2px solid var(--success); }
+  .kds-tab-completed { border-top: 2px solid #6b7280; }
+
+  /* Sound chip stays right-aligned on mobile too. */
+  .kds-sound-status {
+    margin-bottom: 10px;
+  }
+}
+
+/* =========================================================
+   PHASE 5 — UI/UX POLISH + DEVICE-AGNOSTIC PASS
+   (appended; overrides via cascade — no existing rule removed)
+   ========================================================= */
+
+/* --- Design tokens: radius + shadow scale (additive) --- */
+:root {
+  --radius-sm: 10px;   /* controls: buttons, inputs, tabs, pills-ctrl */
+  --radius: 12px;      /* containers: cards, tables, modals, empty states */
+  --radius-lg: 16px;   /* large panels */
+  --shadow-sm: 0 4px 14px rgba(44, 35, 20, 0.06);
+  --shadow-md: 0 12px 30px rgba(44, 35, 20, 0.08);
+}
+
+/* --- Global overflow / wrapping guards (device-agnostic) --- */
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+.card,
+.modal,
+.empty-state,
+.toast,
+.kds-card,
+.table-row {
+  overflow-wrap: anywhere;
+}
+
+/* --- Container radius/shadow consistency --- */
+.card {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.table-row,
+.empty-state {
+  border-radius: var(--radius);
+}
+
+.modal {
+  border-radius: var(--radius);
+}
+
+.kds-card {
+  border-radius: var(--radius);
+}
+
+/* --- Control radius consistency --- */
+.button,
+.tab,
+.form-control,
+.form-select,
+.search-input,
+.qty-stepper {
+  border-radius: var(--radius-sm);
+}
+
+/* --- Typography hierarchy: page titles consistent across pages --- */
+.section-header h1 {
+  font-size: clamp(1.55rem, 4vw, 2.3rem);
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.card h3 {
+  line-height: 1.25;
+}
+
+/* --- Button consistency: uniform height + tap-friendly --- */
+.button {
+  min-height: 44px;
+  line-height: 1.1;
+}
+
+.button.ghost,
+.button.secondary,
+.button.danger {
+  min-height: 44px;
+}
+
+/* --- Empty state: feels intentional --- */
+.empty-state {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 32px 24px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.empty-state .actions {
+  justify-content: center;
+}
+
+/* --- Modal: never exceed the viewport; scroll tall content --- */
+.modal,
+.modal-lg {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+/* --- Section header: graceful wrap when the right-side action is wide --- */
+.section-header {
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   TABLET — 561px to 1024px refinements
+   ========================================================= */
+@media (min-width: 561px) and (max-width: 1024px) {
+  /* Manager table rows: keep label readable, let actions wrap below */
+  .table-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 10px;
+  }
+  .table-row .actions {
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+  }
+
+  /* Dashboard / KDS metrics: 2-up avoids cramped 4-up on tablets */
+  .kds-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =========================================================
+   MOBILE — <=560px touch + spacing refinements
+   ========================================================= */
+@media (max-width: 560px) {
+  .page {
+    width: min(100%, calc(100% - 24px));
+    padding: 22px 0 44px;
+  }
+
+  /* Touch targets: 44px minimum on interactive controls */
+  .tab,
+  .nav-dropdown-item,
+  .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .modal-close,
+  .toast-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .qty-stepper button {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Section header stacks; action drops to its own row */
+  .section-header {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  /* Table-row action buttons fill width so they never collide */
+  .table-row .actions {
+    width: 100%;
+  }
+  .table-row .actions .button {
+    flex: 1 1 auto;
+  }
+
+  /* Tighter card padding reclaims space on small screens */
+  .card {
+    padding: 16px;
+  }
+
+  /* Toast shelf spans the screen cleanly */
+  .toast-shelf {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+  .toast {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Cart summary should not stay sticky on a tall mobile scroll */
+  .cart-summary {
+    position: static;
+  }
+}
+
+/* --- Very small phones (<=360px) — prevent any clipping --- */
+@media (max-width: 360px) {
+  .page {
+    width: min(100%, calc(100% - 16px));
+  }
+  .button {
+    padding: 11px 13px;
+  }
+}
+
+/* =========================================================
+   PHASE 6 — MENU IMAGES (one per item)
+   object-fit cover · fixed aspect ratio · graceful fallback
+   ========================================================= */
+
+/* --- Customer card thumbnail (Home + Menu) --- */
+.food-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #f1ece1;
+}
+
+.food-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Cart line-item thumbnail --- */
+.cart-row-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cart-row-text {
+  min-width: 0;
+}
+
+.cart-thumb {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #f1ece1;
+}
+
+.cart-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Order detail item thumbnail --- */
+.order-item-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.order-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1ece1;
+}
+
+.order-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- Manager: row thumbnail + form image field --- */
+.menu-row-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.menu-row-thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1ece1;
+}
+
+.menu-row-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-image-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-image-upload {
+  width: max-content;
+}
+
+.menu-image-preview img {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: #f1ece1;
+}
+
+@media (max-width: 560px) {
+  .menu-image-preview img {
+    max-width: 100%;
+  }
+  .cart-thumb {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* =========================================================
+   PHASE 7 — LANGUAGE TOGGLE (EN | NE)
+   ========================================================= */
+
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.lang-toggle-btn {
+  min-height: 32px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.lang-toggle-btn.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.lang-toggle-btn:not(.active):hover {
+  color: var(--brand-dark);
+}
+
+.home-topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 360px) {
+  .lang-toggle-btn {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+}

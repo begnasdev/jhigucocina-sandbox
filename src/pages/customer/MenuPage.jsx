@@ -4,15 +4,16 @@ import { getMenuItems } from "../../services/menuService";
 import { useCart } from "../../context/CartContext";
 import { useRoom } from "../../context/RoomContext";
 import { useToast } from "../../context/ToastContext";
+import { useLanguage } from "../../context/LanguageContext";
 import Navbar from "../../components/Navbar";
 import SearchBar from "../../components/SearchBar";
 import { formatNPR } from "../../utils/format";
 
 const SORT_OPTIONS = [
-  { value: "default", label: "Sort: Featured" },
-  { value: "name", label: "Sort: Name (A–Z)" },
-  { value: "price-asc", label: "Sort: Price ↑" },
-  { value: "price-desc", label: "Sort: Price ↓" },
+  { value: "default", key: "menu.sortFeatured" },
+  { value: "name", key: "menu.sortName" },
+  { value: "price-asc", key: "menu.sortPriceAsc" },
+  { value: "price-desc", key: "menu.sortPriceDesc" },
 ];
 
 function MenuPage() {
@@ -25,6 +26,7 @@ function MenuPage() {
   const { addToCart } = useCart();
   const { room, floor, hasRoom } = useRoom();
   const toast = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +76,7 @@ function MenuPage() {
 
   const handleAdd = (item) => {
     addToCart(item);
-    toast.success(`Added ${item.name}`);
+    toast.success(t("menu.itemAdded", { name: item.name }));
   };
 
   return (
@@ -84,8 +86,8 @@ function MenuPage() {
       <main className="page">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Food and beverage</p>
-            <h1>Menu</h1>
+            <p className="eyebrow">{t("menu.eyebrow")}</p>
+            <h1>{t("menu.title")}</h1>
           </div>
         </div>
 
@@ -93,8 +95,8 @@ function MenuPage() {
           <div className="room-banner" role="status" aria-live="polite">
             <span className="room-banner-icon" aria-hidden="true">R</span>
             <span>
-              Delivering to <strong>Room {room}</strong>
-              {floor ? <> · Floor {floor}</> : null}
+              {t("room.deliveringTo")} <strong>{t("room.room")} {room}</strong>
+              {floor ? <> · {t("room.floor")} {floor}</> : null}
             </span>
           </div>
         )}
@@ -107,10 +109,10 @@ function MenuPage() {
                 className="form-select menu-sort"
                 value={sort}
                 onChange={(e) => setSort(e.target.value)}
-                aria-label="Sort menu"
+                aria-label={t("menu.sortAria")}
               >
                 {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>{t(o.key)}</option>
                 ))}
               </select>
             </div>
@@ -122,19 +124,19 @@ function MenuPage() {
                   key={category}
                   onClick={() => setSelectedCategory(category)}
                 >
-                  {category}
+                  {category === "All" ? t("menu.all") : category}
                 </button>
               ))}
             </div>
 
             <p className="muted" style={{ marginBottom: 12 }}>
               {loading
-                ? "Loading menu…"
-                : `${filteredItems.length} item${filteredItems.length === 1 ? "" : "s"}`}
+                ? t("menu.loading")
+                : t("menu.itemCount", { count: filteredItems.length })}
             </p>
 
             {loading ? (
-              <div className="grid cards" aria-busy="true" aria-label="Loading menu">
+              <div className="grid cards" aria-busy="true" aria-label={t("menu.loading")}>
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <article className="skeleton-card" key={`skel-${i}`}>
                     <span className="skeleton-pill" />
@@ -145,23 +147,28 @@ function MenuPage() {
                 ))}
               </div>
             ) : filteredItems.length === 0 ? (
-              <div className="empty-state">No matching menu items found.</div>
+              <div className="empty-state">{t("menu.noResults")}</div>
             ) : (
               <div className="grid cards">
                 {filteredItems.map((item) => (
                   <article className="card food-card" key={item.id}>
+                    {item.imageUrl ? (
+                      <div className="food-thumb">
+                        <img src={item.imageUrl} alt={item.name} loading="lazy" />
+                      </div>
+                    ) : null}
                     <div className="food-meta">
-                      <span className="pill">{item.category || item.Sub_menu || "Menu"}</span>
-                      <span className="muted">{item.prepLine || "Kitchen"}</span>
+                      <span className="pill">{item.category || item.Sub_menu || t("menu.fallbackCategory")}</span>
+                      <span className="muted">{item.prepLine || t("menu.fallbackPrepLine")}</span>
                     </div>
                     <div>
                       <h3>{item.name}</h3>
-                      <p className="muted">{item.description || "Prepared fresh for this provider menu."}</p>
+                      <p className="muted">{item.description || t("menu.descFallback")}</p>
                     </div>
                     <div className="food-meta">
                       <span className="price">{formatNPR(item.price)}</span>
                       <button className="button" onClick={() => handleAdd(item)}>
-                        Add
+                        {t("menu.add")}
                       </button>
                     </div>
                   </article>

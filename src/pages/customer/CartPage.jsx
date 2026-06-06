@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useRoom } from "../../context/RoomContext";
 import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { createOrder } from "../../services/orderService";
 import { DEFAULT_PROVIDER_ID } from "../../config/providerConfig";
 import { formatNPR } from "../../utils/format";
@@ -27,6 +28,7 @@ function CartPage() {
   const { room, floor, hasRoom } = useRoom();
   const toast = useToast();
   const confirm = useConfirm();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,21 +38,22 @@ function CartPage() {
   const handleClear = async () => {
     if (cartItems.length === 0) return;
     const ok = await confirm({
-      title: "Clear your cart?",
-      body: "All items will be removed.",
-      confirmLabel: "Clear cart",
+      title: t("cart.clearTitle"),
+      body: t("cart.clearBody"),
+      confirmLabel: t("cart.clear"),
+      cancelLabel: t("common.cancel"),
       tone: "danger",
     });
     if (ok) {
       clearCart();
-      toast.info("Cart cleared");
+      toast.info(t("cart.cleared"));
     }
   };
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
     if (!user) {
-      toast.info("Please log in to place an order");
+      toast.info(t("cart.loginRequired"));
       navigate("/login");
       return;
     }
@@ -64,11 +67,11 @@ function CartPage() {
         { room, floor }
       );
       clearCart();
-      toast.success(`Order placed (${orderId})`);
+      toast.success(t("cart.orderPlaced", { id: orderId }));
       navigate("/customer/orders");
     } catch (error) {
       console.error("Checkout failed:", error);
-      toast.error(error.message || "Checkout failed");
+      toast.error(error.message || t("cart.checkoutFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -81,27 +84,27 @@ function CartPage() {
       <main className="page">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Checkout</p>
-            <h1>Your Cart</h1>
+            <p className="eyebrow">{t("cart.eyebrow")}</p>
+            <h1>{t("cart.title")}</h1>
             <p className="muted">
               {cartCount > 0
-                ? `${cartCount} item${cartCount === 1 ? "" : "s"} ready to send to the kitchen.`
-                : "Add items from the menu to get started."}
+                ? t("cart.subtitleItems", { count: cartCount })
+                : t("cart.subtitleEmpty")}
             </p>
           </div>
           {cartItems.length > 0 && (
             <button className="button ghost" onClick={handleClear}>
-              Clear cart
+              {t("cart.clear")}
             </button>
           )}
         </div>
 
         {cartItems.length === 0 ? (
           <div className="empty-state">
-            <p>Your cart is empty.</p>
+            <p>{t("cart.empty")}</p>
             <div className="actions" style={{ marginTop: 12 }}>
               <Link className="button" to="/menu">
-                Browse the menu
+                {t("cart.browseMenu")}
               </Link>
             </div>
           </div>
@@ -111,18 +114,25 @@ function CartPage() {
               {cartItems.map((item) => (
                 <article className="card cart-row" key={item.id}>
                   <div className="cart-row-info">
-                    <span className="pill">{item.category || "Menu item"}</span>
-                    <h3>{item.name}</h3>
-                    {item.description && (
-                      <p className="muted" style={{ marginTop: 4 }}>{item.description}</p>
-                    )}
+                    {item.imageUrl ? (
+                      <div className="cart-thumb">
+                        <img src={item.imageUrl} alt="" loading="lazy" />
+                      </div>
+                    ) : null}
+                    <div className="cart-row-text">
+                      <span className="pill">{item.category || t("menu.fallbackCategory")}</span>
+                      <h3>{item.name}</h3>
+                      {item.description && (
+                        <p className="muted" style={{ marginTop: 4 }}>{item.description}</p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="qty-stepper" role="group" aria-label={`Quantity for ${item.name}`}>
+                  <div className="qty-stepper" role="group" aria-label={`${item.name}`}>
                     <button
                       type="button"
                       onClick={() => decrementItem(item.id)}
-                      aria-label="Decrease quantity"
+                      aria-label="−"
                     >
                       −
                     </button>
@@ -130,7 +140,7 @@ function CartPage() {
                     <button
                       type="button"
                       onClick={() => incrementItem(item.id)}
-                      aria-label="Increase quantity"
+                      aria-label="+"
                     >
                       +
                     </button>
@@ -141,7 +151,7 @@ function CartPage() {
                       {formatNPR(Number(item.price || 0) * item.quantity)}
                     </span>
                     <span className="muted" style={{ fontSize: ".82rem" }}>
-                      {formatNPR(item.price)} each
+                      {formatNPR(item.price)} {t("cart.each")}
                     </span>
                   </div>
 
@@ -149,49 +159,58 @@ function CartPage() {
                     type="button"
                     className="button ghost"
                     onClick={() => removeItemCompletely(item.id)}
-                    aria-label={`Remove ${item.name} from cart`}
+                    aria-label={`${t("common.delete")} ${item.name}`}
                   >
-                    Remove
+                    {t("common.delete")}
                   </button>
                 </article>
               ))}
             </section>
 
             <aside className="card cart-summary">
-              <span className="pill">Order summary</span>
-              <h3 style={{ marginTop: 10 }}>Review and place</h3>
+              <span className="pill">{t("cart.summary")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("cart.reviewPlace")}</h3>
 
               {hasRoom ? (
-                <p className="room-info" style={{ marginTop: 8 }}>
-                  Delivering to <strong>Room {room}</strong>
-                  {floor ? <> · Floor {floor}</> : null}
+                <p
+                  id="checkout-room-info"
+                  className="room-info"
+                  style={{ marginTop: 8 }}
+                >
+                  {t("room.deliveringTo")} <strong>{t("room.room")} {room}</strong>
+                  {floor ? <> · {t("room.floor")} {floor}</> : null}
                 </p>
               ) : (
                 <p
+                  id="checkout-room-warning"
                   className="room-warning muted"
                   style={{ marginTop: 8, fontSize: ".9rem" }}
                 >
-                  No room detected — please scan the QR code in your room.
+                  {t("cart.noRoom")}
                 </p>
               )}
 
               <div className="row">
-                <span>Subtotal</span>
+                <span>{t("cart.subtotal")}</span>
                 <strong>{formatNPR(cartTotal)}</strong>
               </div>
               <div className="row">
-                <span>Tax (8.75%)</span>
+                <span>{t("cart.serviceCharge")}</span>
                 <strong>{formatNPR(tax)}</strong>
               </div>
               <hr />
               <div className="row">
-                <span>Total</span>
+                <span>{t("cart.total")}</span>
                 <span className="price">{formatNPR(total)}</span>
               </div>
 
               {!user && (
-                <p className="muted" style={{ marginTop: 10, fontSize: ".9rem" }}>
-                  You'll be asked to log in to place the order.
+                <p
+                  id="checkout-login-hint"
+                  className="muted"
+                  style={{ marginTop: 10, fontSize: ".9rem" }}
+                >
+                  {t("cart.loginHint")}
                 </p>
               )}
 
@@ -201,13 +220,27 @@ function CartPage() {
                   onClick={handleCheckout}
                   disabled={submitting || !hasRoom}
                   style={{ width: "100%" }}
+                  title={
+                    !hasRoom
+                      ? t("cart.checkoutDisabledRoom")
+                      : !user
+                      ? t("cart.checkoutDisabledLogin")
+                      : undefined
+                  }
+                  aria-describedby={
+                    !hasRoom
+                      ? "checkout-room-warning"
+                      : !user
+                      ? "checkout-login-hint"
+                      : "checkout-room-info"
+                  }
                 >
-                  {submitting ? "Placing order…" : "Checkout"}
+                  {submitting ? t("cart.placing") : t("cart.checkout")}
                 </button>
               </div>
               <div className="actions" style={{ marginTop: 8 }}>
                 <Link className="button ghost" to="/menu" style={{ width: "100%" }}>
-                  Keep browsing
+                  {t("cart.keepBrowsing")}
                 </Link>
               </div>
             </aside>

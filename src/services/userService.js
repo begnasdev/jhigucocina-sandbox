@@ -20,14 +20,10 @@ export const getUsers = async (
     )
   );
 
-  console.log("USERS SNAPSHOT:", snapshot.docs);
-
   const users = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   }));
-
-  console.log("USERS:", users);
 
   return users;
 };

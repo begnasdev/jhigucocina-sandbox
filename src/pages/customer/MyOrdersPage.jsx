@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { formatNPR } from "../../utils/format";
 
 import {
@@ -9,12 +11,12 @@ import {
   ORDER_FLOW,
 } from "../../services/orderService";
 
-const getTimeAgo = (seconds) => {
+const getTimeAgo = (seconds, t) => {
   const diff = Math.floor(Date.now() / 1000 - seconds);
-  if (diff < 60) return `${diff} sec ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} hrs ago`;
-  return `${Math.floor(diff / 86400)} days ago`;
+  if (diff < 60) return t("time.secondsAgo", { n: diff });
+  if (diff < 3600) return t("time.minutesAgo", { n: Math.floor(diff / 60) });
+  if (diff < 86400) return t("time.hoursAgo", { n: Math.floor(diff / 3600) });
+  return t("time.daysAgo", { n: Math.floor(diff / 86400) });
 };
 
 const fmtDateTime = (seconds) => {
@@ -28,11 +30,23 @@ const fmtDateTime = (seconds) => {
 
 function MyOrdersPage() {
   const { user } = useAuth();
+  const toast = useToast();
+  const { t } = useLanguage();
 
   const [activeOrders, setActiveOrders] = useState([]);
   const [historyOrders, setHistoryOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState(null);
+
+  const fetchOrders = useCallback(async () => {
+    if (!user) return { orders: [], history: [] };
+    const [orders, history] = await Promise.all([
+      getUserOrders(user.uid),
+      getUserOrderHistory(user.uid),
+    ]);
+    return { orders, history };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -40,13 +54,9 @@ function MyOrdersPage() {
     let isMounted = true;
     setLoading(true);
 
-    const loadOrders = async () => {
+    (async () => {
       try {
-        const [orders, history] = await Promise.all([
-          getUserOrders(user.uid),
-          getUserOrderHistory(user.uid),
-        ]);
-
+        const { orders, history } = await fetchOrders();
         if (!isMounted) return;
         setActiveOrders(orders);
         setHistoryOrders(history);
@@ -55,21 +65,35 @@ function MyOrdersPage() {
       } finally {
         if (isMounted) setLoading(false);
       }
-    };
-
-    loadOrders();
+    })();
 
     return () => {
       isMounted = false;
     };
-  }, [user]);
+  }, [user, fetchOrders]);
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const { orders, history } = await fetchOrders();
+      setActiveOrders(orders);
+      setHistoryOrders(history);
+      toast.success(t("orders.refreshed"));
+    } catch (err) {
+      console.error("Refresh failed:", err);
+      toast.error(t("orders.refreshFailed"));
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (!user) {
     return (
       <>
         <Navbar />
         <main className="page">
-          <div className="empty-state">Please login to see your orders.</div>
+          <div className="empty-state">{t("orders.pleaseLogin")}</div>
         </main>
       </>
     );
@@ -82,33 +106,55 @@ function MyOrdersPage() {
       <main className="page">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Customer order tracking</p>
-            <h1>My Orders</h1>
+            <p className="eyebrow">{t("orders.eyebrow")}</p>
+            <h1>{t("orders.title")}</h1>
           </div>
-          <span className="pill">
-            {activeOrders.length} active • {historyOrders.length} past
-          </span>
+          <div className="actions">
+            <span className="pill">
+              {t("orders.summary", { active: activeOrders.length, past: historyOrders.length })}
+            </span>
+            <button
+              type="button"
+              className="button ghost"
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
+              aria-label={t("common.refresh")}
+            >
+              {refreshing ? t("common.refreshing") : t("common.refresh")}
+            </button>
+          </div>
         </div>
 
-        {loading && <div className="empty-state">Loading your orders…</div>}
-
         <section className="section">
-          <h2>Active Orders</h2>
+          <h2>{t("orders.activeTitle")}</h2>
 
-          {activeOrders.length === 0 ? (
-            <div className="empty-state">No active orders.</div>
+          {loading ? (
+            <div className="grid cards" aria-busy="true" aria-label={t("common.loading")}>
+              {[0, 1].map((i) => (
+                <article className="skeleton-card" key={`skel-active-${i}`}>
+                  <span className="skeleton-pill" />
+                  <span className="skeleton-text lg w-50" />
+                  <span className="skeleton-text w-90" />
+                  <span className="skeleton-text w-70" />
+                </article>
+              ))}
+            </div>
+          ) : activeOrders.length === 0 ? (
+            <div className="empty-state">{t("orders.noActive")}</div>
           ) : (
             <div className="grid cards">
               {activeOrders.map((order) => (
                 <article className="card food-card" key={order.id}>
                   <div className="row">
-                    <h3>Order #{order.id}</h3>
-                    <span className={`status-pill ${order.status}`}>{order.status}</span>
+                    <h3>{t("orders.orderNum", { id: order.id })}</h3>
+                    <span className={`status-pill ${order.status}`}>
+                      {t(`status.${order.status}`)}
+                    </span>
                   </div>
 
                   <div
                     className="progress-steps"
-                    aria-label={`Order is ${order.status}`}
+                    aria-label={t(`status.${order.status}`)}
                   >
                     {ORDER_FLOW.map((status) => (
                       <span
@@ -119,25 +165,25 @@ function MyOrdersPage() {
                             : ""
                         }`}
                         key={status}
-                        title={status}
+                        title={t(`status.${status}`)}
                       />
                     ))}
                   </div>
 
                   <div className="row">
-                    <span className="muted">Total</span>
+                    <span className="muted">{t("orders.total")}</span>
                     <strong>{formatNPR(order.pricing?.total)}</strong>
                   </div>
                   <div className="row">
-                    <span className="muted">Placed</span>
+                    <span className="muted">{t("orders.placed")}</span>
                     <span>
                       {order.timeline?.placedAt?.seconds
-                        ? getTimeAgo(order.timeline.placedAt.seconds)
-                        : "Unknown"}
+                        ? getTimeAgo(order.timeline.placedAt.seconds, t)
+                        : t("time.unknown")}
                     </span>
                   </div>
                   <div className="row">
-                    <span className="muted">Items</span>
+                    <span className="muted">{t("orders.items")}</span>
                     <span>{order.items?.length || 0}</span>
                   </div>
 
@@ -146,7 +192,7 @@ function MyOrdersPage() {
                     className="button ghost"
                     onClick={() => setSelected(order)}
                   >
-                    View details
+                    {t("orders.viewDetails")}
                   </button>
                 </article>
               ))}
@@ -155,18 +201,28 @@ function MyOrdersPage() {
         </section>
 
         <section className="section">
-          <h2>Order History</h2>
+          <h2>{t("orders.historyTitle")}</h2>
 
-          {historyOrders.length === 0 ? (
-            <div className="empty-state">No completed orders yet.</div>
+          {loading ? (
+            <div className="grid cards" aria-busy="true" aria-label={t("common.loading")}>
+              {[0, 1].map((i) => (
+                <article className="skeleton-card" key={`skel-history-${i}`}>
+                  <span className="skeleton-pill" />
+                  <span className="skeleton-text lg w-50" />
+                  <span className="skeleton-text w-90" />
+                </article>
+              ))}
+            </div>
+          ) : historyOrders.length === 0 ? (
+            <div className="empty-state">{t("orders.noHistory")}</div>
           ) : (
             <div className="grid cards">
               {historyOrders.map((order) => (
                 <article className="card" key={order.id}>
-                  <span className="status-pill completed">Completed</span>
-                  <h3 style={{ marginTop: 10 }}>Order #{order.id}</h3>
+                  <span className="status-pill completed">{t("status.completed")}</span>
+                  <h3 style={{ marginTop: 10 }}>{t("orders.orderNum", { id: order.id })}</h3>
                   <div className="row">
-                    <span className="muted">Total</span>
+                    <span className="muted">{t("orders.total")}</span>
                     <strong>{formatNPR(order.pricing?.total)}</strong>
                   </div>
                   <button
@@ -175,7 +231,7 @@ function MyOrdersPage() {
                     onClick={() => setSelected(order)}
                     style={{ marginTop: 10 }}
                   >
-                    View details
+                    {t("orders.viewDetails")}
                   </button>
                 </article>
               ))}
@@ -185,20 +241,20 @@ function MyOrdersPage() {
       </main>
 
       {selected && (
-        <OrderDetailModal order={selected} onClose={() => setSelected(null)} />
+        <OrderDetailModal order={selected} onClose={() => setSelected(null)} t={t} />
       )}
     </>
   );
 }
 
-function OrderDetailModal({ order, onClose }) {
+function OrderDetailModal({ order, onClose, t }) {
   const timeline = order.timeline || {};
   const events = [
-    { key: "placedAt", label: "Placed" },
-    { key: "acceptedAt", label: "Accepted" },
-    { key: "preparingAt", label: "Preparing" },
-    { key: "readyAt", label: "Ready" },
-    { key: "completedAt", label: "Completed" },
+    { key: "placedAt", labelKey: "status.placed" },
+    { key: "acceptedAt", labelKey: "status.accepted" },
+    { key: "preparingAt", labelKey: "status.preparing" },
+    { key: "readyAt", labelKey: "status.ready" },
+    { key: "completedAt", labelKey: "status.completed" },
   ];
 
   return (
@@ -207,48 +263,55 @@ function OrderDetailModal({ order, onClose }) {
         className="modal modal-lg"
         role="dialog"
         aria-modal="true"
-        aria-label={`Order ${order.id} details`}
+        aria-label={t("orders.orderNum", { id: order.id })}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="row" style={{ alignItems: "start" }}>
           <div>
-            <span className={`status-pill ${order.status}`}>{order.status}</span>
-            <h3 style={{ margin: "8px 0 4px" }}>Order #{order.id}</h3>
+            <span className={`status-pill ${order.status}`}>{t(`status.${order.status}`)}</span>
+            <h3 style={{ margin: "8px 0 4px" }}>{t("orders.orderNum", { id: order.id })}</h3>
             <p className="muted" style={{ fontSize: ".88rem" }}>
-              Placed {fmtDateTime(timeline.placedAt?.seconds)}
+              {t("orders.placed")} {fmtDateTime(timeline.placedAt?.seconds)}
             </p>
           </div>
           <button
             type="button"
             className="modal-close"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             ×
           </button>
         </div>
 
-        <h4 style={{ marginTop: 18 }}>Items</h4>
+        <h4 style={{ marginTop: 18 }}>{t("orders.detailItems")}</h4>
         <div className="table-list" style={{ marginBottom: 12 }}>
           {order.items?.map((item, i) => (
             <div className="row" key={`${order.id}-i-${i}`}>
-              <span>
-                <strong>{item.name}</strong>
-                <span className="muted" style={{ marginLeft: 8 }}>× {item.quantity}</span>
+              <span className="order-item-label">
+                {item.imageUrl ? (
+                  <span className="order-thumb">
+                    <img src={item.imageUrl} alt="" loading="lazy" />
+                  </span>
+                ) : null}
+                <span>
+                  <strong>{item.name}</strong>
+                  <span className="muted" style={{ marginLeft: 8 }}>× {item.quantity}</span>
+                </span>
               </span>
               <span>{formatNPR(Number(item.price || 0) * item.quantity)}</span>
             </div>
-          )) || <p className="muted">No items recorded.</p>}
+          )) || <p className="muted">{t("orders.noItemsRecorded")}</p>}
         </div>
 
         <hr />
 
         <div className="row">
-          <span className="muted">Total</span>
+          <span className="muted">{t("orders.total")}</span>
           <span className="price">{formatNPR(order.pricing?.total)}</span>
         </div>
 
-        <h4 style={{ marginTop: 18 }}>Timeline</h4>
+        <h4 style={{ marginTop: 18 }}>{t("orders.timeline")}</h4>
         <ul className="timeline">
           {events.map((ev) => {
             const ts = timeline[ev.key]?.seconds;
@@ -259,9 +322,9 @@ function OrderDetailModal({ order, onClose }) {
               >
                 <span className="timeline-dot" aria-hidden="true" />
                 <div>
-                  <strong>{ev.label}</strong>
+                  <strong>{t(ev.labelKey)}</strong>
                   <div className="muted" style={{ fontSize: ".85rem" }}>
-                    {ts ? fmtDateTime(ts) : "Pending"}
+                    {ts ? fmtDateTime(ts) : t("orders.pending")}
                   </div>
                 </div>
               </li>
@@ -270,7 +333,7 @@ function OrderDetailModal({ order, onClose }) {
         </ul>
 
         <div className="actions" style={{ marginTop: 16, justifyContent: "flex-end" }}>
-          <button className="button" onClick={onClose}>Close</button>
+          <button className="button" onClick={onClose}>{t("common.close")}</button>
         </div>
       </div>
     </div>

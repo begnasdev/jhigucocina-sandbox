@@ -28,11 +28,9 @@ export function AuthProvider({ children }) {
         );
 
         const snap = await getDoc(userRef);
-        console.log("DOC EXISTS:", snap.exists());
 
         if (snap.exists()) {
           const extraData = snap.data();
-          console.log("FIRESTORE USER:", extraData);
 
           // STEP 2: merge Firebase Auth + Firestore data
           setUser({

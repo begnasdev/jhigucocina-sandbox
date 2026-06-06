@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMenuItems } from "../../services/menuService";
 import { useRoom } from "../../context/RoomContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { formatNPR } from "../../utils/format";
 
 function HomePage() {
@@ -11,6 +12,7 @@ function HomePage() {
   const [featuredItems, setFeaturedItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const { room, floor, hasRoom } = useRoom();
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     let cancelled = false;
@@ -38,19 +40,44 @@ function HomePage() {
       <Navbar />
 
       <main className="page">
+        <div className="home-topbar">
+          <div
+            className="lang-toggle"
+            role="group"
+            aria-label={t("lang.label")}
+          >
+            <button
+              type="button"
+              className={`lang-toggle-btn${language === "en" ? " active" : ""}`}
+              onClick={() => setLanguage("en")}
+              aria-pressed={language === "en"}
+            >
+              {t("lang.en")}
+            </button>
+            <button
+              type="button"
+              className={`lang-toggle-btn${language === "ne" ? " active" : ""}`}
+              onClick={() => setLanguage("ne")}
+              aria-pressed={language === "ne"}
+            >
+              {t("lang.ne")}
+            </button>
+          </div>
+        </div>
+
         {hasRoom && (
           <div className="room-banner" role="status" aria-live="polite">
             <span className="room-banner-icon" aria-hidden="true">R</span>
             <span>
-              Delivering to <strong>Room {room}</strong>
-              {floor ? <> · Floor {floor}</> : null}
+              {t("room.deliveringTo")} <strong>{t("room.room")} {room}</strong>
+              {floor ? <> · {t("room.floor")} {floor}</> : null}
             </span>
           </div>
         )}
 
         <section className="hero">
           <div className="hero-copy">
-            <p className="eyebrow">Provider ordering platform</p>
+            <p className="eyebrow">{t("home.eyebrow")}</p>
             <h1>Jhigu Cocina</h1>
 
             <div className="search-panel">
@@ -59,10 +86,10 @@ function HomePage() {
 
             <div className="hero-actions">
               <Link className="button" to={`/menu${search ? `?q=${encodeURIComponent(search)}` : ""}`}>
-                View Menu
+                {t("home.viewMenu")}
               </Link>
               <Link className="button secondary" to="/customer/cart">
-                Open Cart
+                {t("home.openCart")}
               </Link>
             </div>
           </div>
@@ -73,14 +100,14 @@ function HomePage() {
         <section className="section">
           <div className="section-header">
             <div>
-              <p className="eyebrow">Today at the counter</p>
-              <h2>Popular picks</h2>
+              <p className="eyebrow">{t("home.popularEyebrow")}</p>
+              <h2>{t("home.popularTitle")}</h2>
             </div>
-            <Link className="button ghost" to="/menu">Full Menu</Link>
+            <Link className="button ghost" to="/menu">{t("home.fullMenu")}</Link>
           </div>
 
           {loading ? (
-            <div className="grid cards" aria-busy="true" aria-label="Loading featured items">
+            <div className="grid cards" aria-busy="true" aria-label={t("common.loading")}>
               {[0, 1, 2].map((i) => (
                 <article className="skeleton-card" key={`skel-${i}`}>
                   <span className="skeleton-pill" />
@@ -91,11 +118,16 @@ function HomePage() {
               ))}
             </div>
           ) : featuredItems.length === 0 ? (
-            <div className="empty-state">No menu items available yet.</div>
+            <div className="empty-state">{t("home.noItems")}</div>
           ) : (
             <div className="grid cards">
               {featuredItems.map((item) => (
                 <article className="card food-card" key={item.id}>
+                  {item.imageUrl ? (
+                    <div className="food-thumb">
+                      <img src={item.imageUrl} alt={item.name} loading="lazy" />
+                    </div>
+                  ) : null}
                   <span className="pill">{item.category}</span>
                   <div>
                     <h3>{item.name}</h3>

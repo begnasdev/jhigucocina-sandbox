@@ -5,6 +5,7 @@ import {
   ORDER_STATUS,
 } from "../../services/orderService";
 import Navbar from "../../components/Navbar";
+import { useLanguage } from "../../context/LanguageContext";
 import { formatNPR } from "../../utils/format";
 
 const computeStats = (orders) => {
@@ -26,16 +27,17 @@ const computeStats = (orders) => {
   };
 };
 
-const getTimeAgo = (seconds) => {
+const getTimeAgo = (seconds, t) => {
   if (!seconds) return "—";
   const diff = Math.floor(Date.now() / 1000 - seconds);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60) return t("time.secondsAgo", { n: diff });
+  if (diff < 3600) return t("time.minutesAgo", { n: Math.floor(diff / 60) });
+  if (diff < 86400) return t("time.hoursAgo", { n: Math.floor(diff / 3600) });
+  return t("time.daysAgo", { n: Math.floor(diff / 86400) });
 };
 
 function ManagerDashboard() {
+  const { t } = useLanguage();
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(() => computeStats([]));
 
@@ -73,46 +75,46 @@ function ManagerDashboard() {
       <main className="page">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Provider control center</p>
-            <h1>Manager Dashboard</h1>
+            <p className="eyebrow">{t("dash.eyebrow")}</p>
+            <h1>{t("dash.title")}</h1>
           </div>
-          <Link className="button ghost" to="/staff">Open Kitchen</Link>
+          <Link className="button ghost" to="/staff">{t("dash.openKitchen")}</Link>
         </div>
 
         <div className="grid cards">
-          <DashboardCard title="Active Orders" value={stats.activeOrders} note="Open provider orders" />
-          <DashboardCard title="Preparing" value={stats.preparingOrders} note="Currently in kitchen" />
-          <DashboardCard title="Ready" value={stats.readyOrders} note="Waiting for pickup" />
-          <DashboardCard title="Delayed" value={stats.delayedOrders} note="Over 10 minutes old" tone="warning" />
-          <DashboardCard title="Revenue" value={formatNPR(stats.revenue)} note="Active order value" />
-          <DashboardCard title="Avg Order" value={formatNPR(stats.averageOrderValue)} note="Average basket" />
+          <DashboardCard title={t("dash.metricActive")} value={stats.activeOrders} note={t("dash.metricActiveNote")} />
+          <DashboardCard title={t("dash.metricPreparing")} value={stats.preparingOrders} note={t("dash.metricPreparingNote")} />
+          <DashboardCard title={t("dash.metricReady")} value={stats.readyOrders} note={t("dash.metricReadyNote")} />
+          <DashboardCard title={t("dash.metricDelayed")} value={stats.delayedOrders} note={t("dash.metricDelayedNote")} tone="warning" />
+          <DashboardCard title={t("dash.metricRevenue")} value={formatNPR(stats.revenue)} note={t("dash.metricRevenueNote")} />
+          <DashboardCard title={t("dash.metricAvg")} value={formatNPR(stats.averageOrderValue)} note={t("dash.metricAvgNote")} />
         </div>
 
         <section className="section">
           <div className="section-header">
             <div>
-              <p className="eyebrow">Live</p>
-              <h2>Recent orders</h2>
+              <p className="eyebrow">{t("dash.liveEyebrow")}</p>
+              <h2>{t("dash.recentOrders")}</h2>
             </div>
-            <Link className="button ghost" to="/staff">View all</Link>
+            <Link className="button ghost" to="/staff">{t("dash.viewAll")}</Link>
           </div>
 
           {recent.length === 0 ? (
-            <div className="empty-state">No orders yet.</div>
+            <div className="empty-state">{t("dash.noOrders")}</div>
           ) : (
             <div className="table-list">
               {recent.map((order) => (
                 <div className="table-row" key={order.id}>
                   <div>
-                    <strong>Order #{order.id}</strong>
+                    <strong>{t("orders.orderNum", { id: order.id })}</strong>
                     <div className="muted" style={{ fontSize: ".88rem" }}>
-                      {order.items?.length || 0} item{order.items?.length === 1 ? "" : "s"} • {getTimeAgo(order.timeline?.placedAt?.seconds)}
+                      {t("dash.orderItems", { count: order.items?.length || 0 })} • {getTimeAgo(order.timeline?.placedAt?.seconds, t)}
                     </div>
                   </div>
-                  <span className={`status-pill ${order.status}`}>{order.status}</span>
+                  <span className={`status-pill ${order.status}`}>{t(`status.${order.status}`)}</span>
                   <strong>{formatNPR(order.pricing?.total)}</strong>
                   <Link className="button ghost" to="/staff">
-                    Open
+                    {t("orders.viewDetails")}
                   </Link>
                 </div>
               ))}
@@ -123,22 +125,22 @@ function ManagerDashboard() {
         <section className="section">
           <div className="section-header">
             <div>
-              <p className="eyebrow">Recipes & Ingredients</p>
-              <h2>Provider data</h2>
+              <p className="eyebrow">{t("dash.recipesEyebrow")}</p>
+              <h2>{t("dash.providerData")}</h2>
             </div>
           </div>
           <div className="grid cards">
             <Link to="/manager/ingredients" className="card">
-              <span className="pill">Raw</span>
-              <h3 style={{ marginTop: 10 }}>Raw Ingredients</h3>
+              <span className="pill">{t("dash.cardRaw")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("dash.cardRaw")}</h3>
             </Link>
             <Link to="/manager/prepared" className="card">
-              <span className="pill warning">Prepared</span>
-              <h3 style={{ marginTop: 10 }}>Prepared Ingredients</h3>
+              <span className="pill warning">{t("dash.cardPrepared")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("dash.cardPrepared")}</h3>
             </Link>
             <Link to="/manager/recipes" className="card">
-              <span className="pill">Recipes</span>
-              <h3 style={{ marginTop: 10 }}>Food Item Recipes</h3>
+              <span className="pill">{t("dash.cardRecipes")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("dash.cardRecipes")}</h3>
             </Link>
           </div>
         </section>
@@ -146,26 +148,26 @@ function ManagerDashboard() {
         <section className="section">
           <div className="section-header">
             <div>
-              <p className="eyebrow">Provider</p>
-              <h2>Operations</h2>
+              <p className="eyebrow">{t("dash.providerData")}</p>
+              <h2>{t("dash.operations")}</h2>
             </div>
           </div>
           <div className="grid cards">
             <Link to="/manager/menu" className="card">
-              <span className="pill">Menu</span>
-              <h3 style={{ marginTop: 10 }}>Menu Management</h3>
+              <span className="pill">{t("nav.menu")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("dash.cardMenu")}</h3>
             </Link>
             <Link to="/staff" className="card">
-              <span className="pill warning">Kitchen</span>
-              <h3 style={{ marginTop: 10 }}>Kitchen Orders</h3>
+              <span className="pill warning">{t("nav.kitchen")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("dash.cardKitchen")}</h3>
             </Link>
             <Link to="/manager/rooms" className="card">
-              <span className="pill">Rooms</span>
-              <h3 style={{ marginTop: 10 }}>Room Management</h3>
+              <span className="pill">{t("nav.rooms")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("dash.cardRooms")}</h3>
             </Link>
             <Link to="/admin/users" className="card">
-              <span className="pill">Team</span>
-              <h3 style={{ marginTop: 10 }}>Users</h3>
+              <span className="pill">{t("nav.users")}</span>
+              <h3 style={{ marginTop: 10 }}>{t("dash.cardUsers")}</h3>
             </Link>
           </div>
         </section>

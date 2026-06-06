@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 
 import { getUsers, updateUserRole } from "../../services/userService";
 import Navbar from "../../components/Navbar";
+import { useLanguage } from "../../context/LanguageContext";
 
 const ROLES = ["customer", "staff", "manager", "admin"];
 
 function UsersPage() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,18 +42,18 @@ function UsersPage() {
       <main className="page">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Provider administration</p>
-            <h1>User Management</h1>
+            <p className="eyebrow">{t("um.eyebrow")}</p>
+            <h1>{t("um.title")}</h1>
           </div>
-          <span className="pill">{users.length} user{users.length === 1 ? "" : "s"}</span>
+          <span className="pill">{t("um.count", { count: users.length })}</span>
         </div>
 
         {loading && (
-          <div className="empty-state">Loading users…</div>
+          <div className="empty-state">{t("um.loading")}</div>
         )}
 
         {!loading && users.length === 0 && (
-          <div className="empty-state">No users found yet.</div>
+          <div className="empty-state">{t("um.empty")}</div>
         )}
 
         {!loading && users.length > 0 && (
@@ -64,10 +66,10 @@ function UsersPage() {
                 <h3 style={{ margin: "10px 0 4px", wordBreak: "break-all" }}>
                   {user.email}
                 </h3>
-                <p className="muted" style={{ fontSize: ".82rem" }}>UID: {user.id}</p>
+                <p className="muted" style={{ fontSize: ".82rem" }}>{t("um.uid")}: {user.id}</p>
 
                 <label className="field" style={{ marginTop: 12 }}>
-                  <span>Role</span>
+                  <span>{t("um.role")}</span>
                   <select
                     className="form-select"
                     value={user.role || "customer"}

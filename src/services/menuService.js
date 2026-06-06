@@ -7,9 +7,35 @@ import {
   doc,
   serverTimestamp,
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-import { db } from "../firebase/firebase";
+import { db, storage } from "../firebase/firebase";
 import { DEFAULT_PROVIDER_ID } from "../config/providerConfig";
+
+/**
+ * UPLOAD MENU IMAGE
+ * Stores ONE image in Firebase Storage and returns its download URL.
+ * Firestore only ever stores the resulting URL string — never image data.
+ */
+export const uploadMenuImage = async (
+  file,
+  providerId = DEFAULT_PROVIDER_ID
+) => {
+  if (!file) throw new Error("No file provided");
+
+  const safeName = `${Date.now()}-${(file.name || "image").replace(
+    /[^a-zA-Z0-9._-]/g,
+    "_"
+  )}`;
+
+  const storageRef = ref(
+    storage,
+    `providers/${providerId}/menu/${safeName}`
+  );
+
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+};
 
 /**
  * GET MENU ITEMS

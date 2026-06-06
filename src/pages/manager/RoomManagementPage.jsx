@@ -3,6 +3,7 @@ import Navbar from "../../components/Navbar";
 import RoomQrModal from "../../components/RoomQrModal";
 import { useConfirm } from "../../context/ConfirmContext";
 import { useToast } from "../../context/ToastContext";
+import { useLanguage } from "../../context/LanguageContext";
 import {
   getRooms,
   createRoom,
@@ -20,9 +21,9 @@ const EMPTY = {
 };
 
 const STATUS_FILTERS = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "all", key: "rm.filterAll" },
+  { value: "active", key: "rm.filterActive" },
+  { value: "inactive", key: "rm.filterInactive" },
 ];
 
 const normalize = (value) => {
@@ -34,6 +35,7 @@ const normalize = (value) => {
 function RoomManagementPage() {
   const confirm = useConfirm();
   const toast = useToast();
+  const { t } = useLanguage();
 
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ function RoomManagementPage() {
       setRooms(data);
     } catch (error) {
       console.error("Failed to load rooms:", error);
-      toast.error("Failed to load rooms");
+      toast.error(t("rm.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -96,7 +98,7 @@ function RoomManagementPage() {
     e.preventDefault();
     const roomNumber = draft.roomNumber.trim();
     if (!roomNumber) {
-      toast.error("Room number is required");
+      toast.error(t("rm.roomNumberRequired"));
       return;
     }
     if (
@@ -105,7 +107,7 @@ function RoomManagementPage() {
         editingId === "__new__" ? null : editingId
       )
     ) {
-      toast.error(`Room ${roomNumber} already exists`);
+      toast.error(t("rm.duplicate", { n: roomNumber }));
       return;
     }
 
@@ -121,16 +123,16 @@ function RoomManagementPage() {
       setSaving(true);
       if (editingId === "__new__") {
         await createRoom(payload);
-        toast.success(`Added Room ${roomNumber}`);
+        toast.success(t("rm.added", { n: roomNumber }));
       } else {
         await updateRoom(editingId, payload);
-        toast.success(`Updated Room ${roomNumber}`);
+        toast.success(t("rm.updated", { n: roomNumber }));
       }
       cancel();
       await loadRooms();
     } catch (error) {
       console.error(error);
-      toast.error("Save failed");
+      toast.error(t("rm.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -138,19 +140,20 @@ function RoomManagementPage() {
 
   const remove = async (room) => {
     const ok = await confirm({
-      title: `Delete Room ${room.roomNumber}?`,
-      body: "This room will be removed. Existing orders will keep their room information.",
-      confirmLabel: "Delete",
+      title: t("rm.deleteTitle", { n: room.roomNumber }),
+      body: t("rm.deleteBody"),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
       tone: "danger",
     });
     if (!ok) return;
     try {
       await deleteRoom(room.id);
-      toast.info(`Deleted Room ${room.roomNumber}`);
+      toast.info(t("rm.deleted", { n: room.roomNumber }));
       await loadRooms();
     } catch (error) {
       console.error(error);
-      toast.error("Delete failed");
+      toast.error(t("rm.deleteFailed"));
     }
   };
 
@@ -158,12 +161,14 @@ function RoomManagementPage() {
     try {
       await toggleRoomActive(room.id, !!room.active);
       toast.success(
-        `Room ${room.roomNumber} ${room.active ? "disabled" : "enabled"}`
+        room.active
+          ? t("rm.disabled", { n: room.roomNumber })
+          : t("rm.enabled", { n: room.roomNumber })
       );
       await loadRooms();
     } catch (error) {
       console.error(error);
-      toast.error("Toggle failed");
+      toast.error(t("rm.toggleFailed"));
     }
   };
 
@@ -195,19 +200,19 @@ function RoomManagementPage() {
       <main className="page">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Provider administration</p>
-            <h1>Rooms</h1>
+            <p className="eyebrow">{t("rm.eyebrow")}</p>
+            <h1>{t("rm.title")}</h1>
           </div>
           <div className="actions">
             <span className="pill">
-              {rooms.length} room{rooms.length === 1 ? "" : "s"}
+              {t("rm.count", { count: rooms.length })}
             </span>
             <button
               className="button"
               onClick={startNew}
               disabled={editingId === "__new__"}
             >
-              Add Room
+              {t("rm.addRoom")}
             </button>
           </div>
         </div>
@@ -215,11 +220,11 @@ function RoomManagementPage() {
         {editingId && (
           <form className="card" onSubmit={save} style={{ marginBottom: 18 }}>
             <h3 style={{ marginBottom: 12 }}>
-              {editingId === "__new__" ? "New Room" : "Edit Room"}
+              {editingId === "__new__" ? t("rm.newRoom") : t("rm.editRoom")}
             </h3>
             <div className="form-grid">
               <label>
-                <span className="muted">Room Number *</span>
+                <span className="muted">{t("rm.roomNumber")}</span>
                 <input
                   className="form-control"
                   autoFocus
@@ -231,7 +236,7 @@ function RoomManagementPage() {
                 />
               </label>
               <label>
-                <span className="muted">Floor</span>
+                <span className="muted">{t("rm.floor")}</span>
                 <input
                   className="form-control"
                   placeholder="e.g. 2"
@@ -242,7 +247,7 @@ function RoomManagementPage() {
                 />
               </label>
               <label className="span-2">
-                <span className="muted">Label</span>
+                <span className="muted">{t("rm.label")}</span>
                 <input
                   className="form-control"
                   placeholder="e.g. Deluxe King"
@@ -253,7 +258,7 @@ function RoomManagementPage() {
                 />
               </label>
               <label className="span-2">
-                <span className="muted">Notes</span>
+                <span className="muted">{t("rm.notes")}</span>
                 <input
                   className="form-control"
                   placeholder="e.g. Conference suite"
@@ -264,7 +269,7 @@ function RoomManagementPage() {
                 />
               </label>
               <label>
-                <span className="muted">Status</span>
+                <span className="muted">{t("rm.statusField")}</span>
                 <select
                   className="form-select"
                   value={draft.active ? "active" : "inactive"}
@@ -275,18 +280,18 @@ function RoomManagementPage() {
                     })
                   }
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">{t("rm.active")}</option>
+                  <option value="inactive">{t("rm.inactive")}</option>
                 </select>
               </label>
             </div>
             <div className="actions" style={{ marginTop: 14 }}>
               <button type="submit" className="button" disabled={saving}>
                 {saving
-                  ? "Saving…"
+                  ? t("common.saving")
                   : editingId === "__new__"
-                  ? "Create"
-                  : "Save"}
+                  ? t("rm.create")
+                  : t("common.save")}
               </button>
               <button
                 type="button"
@@ -294,7 +299,7 @@ function RoomManagementPage() {
                 onClick={cancel}
                 disabled={saving}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           </form>
@@ -303,20 +308,20 @@ function RoomManagementPage() {
         <div className="menu-toolbar" style={{ marginBottom: 12 }}>
           <input
             className="form-control"
-            placeholder="Search by room, floor, label…"
+            placeholder={t("rm.search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search rooms"
+            aria-label={t("rm.search")}
           />
           <select
             className="form-select menu-sort"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            aria-label="Filter rooms by status"
+            aria-label={t("rm.statusField")}
           >
             {STATUS_FILTERS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.label}
+                {t(opt.key)}
               </option>
             ))}
           </select>
@@ -334,21 +339,21 @@ function RoomManagementPage() {
               letterSpacing: ".06em",
             }}
           >
-            <span>Room / Label</span>
-            <span>Floor</span>
-            <span>Status</span>
+            <span>{t("rm.colRoom")}</span>
+            <span>{t("rm.colFloor")}</span>
+            <span>{t("rm.colStatus")}</span>
             <span></span>
           </div>
 
           {loading && (
-            <div className="empty-state">Loading rooms…</div>
+            <div className="empty-state">{t("rm.loading")}</div>
           )}
 
           {!loading && filtered.length === 0 && (
             <div className="empty-state">
               {rooms.length === 0
-                ? "No rooms yet. Add the first room to get started."
-                : "No rooms match the current search or filter."}
+                ? t("rm.emptyNone")
+                : t("rm.emptyFilter")}
             </div>
           )}
 
@@ -356,7 +361,7 @@ function RoomManagementPage() {
             filtered.map((room) => (
               <div className="table-row" key={room.id}>
                 <div>
-                  <strong>Room {room.roomNumber}</strong>
+                  <strong>{t("room.room")} {room.roomNumber}</strong>
                   <div className="muted" style={{ fontSize: ".9rem" }}>
                     {room.label || room.notes || "—"}
                   </div>
@@ -365,32 +370,32 @@ function RoomManagementPage() {
                 <span
                   className={`pill${room.active ? "" : " danger"}`}
                 >
-                  {room.active ? "Active" : "Inactive"}
+                  {room.active ? t("rm.active") : t("rm.inactive")}
                 </span>
                 <div className="actions">
                   <button
                     className="button ghost"
                     onClick={() => startEdit(room)}
                   >
-                    Edit
+                    {t("common.edit")}
                   </button>
                   <button
                     className="button ghost"
                     onClick={() => setQrRoom(room)}
                   >
-                    Generate QR
+                    {t("rm.generateQr")}
                   </button>
                   <button
                     className="button ghost"
                     onClick={() => toggleActive(room)}
                   >
-                    {room.active ? "Disable" : "Enable"}
+                    {room.active ? t("common.disable") : t("common.enable")}
                   </button>
                   <button
                     className="button danger"
                     onClick={() => remove(room)}
                   >
-                    Delete
+                    {t("common.delete")}
                   </button>
                 </div>
               </div>

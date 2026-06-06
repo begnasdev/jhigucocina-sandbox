@@ -6,12 +6,14 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useRoom } from "../context/RoomContext";
 import { useToast } from "../context/ToastContext";
+import { useLanguage } from "../context/LanguageContext";
 
 function Navbar() {
   const { cartCount } = useCart();
   const { user } = useAuth();
   const { room, floor, hasRoom } = useRoom();
   const toast = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -83,15 +85,15 @@ function Navbar() {
         className={`nav-links${mobileOpen ? " open" : ""}`}
         aria-label="Primary"
       >
-        <NavItem to="/" onClick={closeAll}>Home</NavItem>
-        <NavItem to="/menu" onClick={closeAll}>Menu</NavItem>
+        <NavItem to="/" onClick={closeAll}>{t("nav.home")}</NavItem>
+        <NavItem to="/menu" onClick={closeAll}>{t("nav.menu")}</NavItem>
 
         {user && (
-          <NavItem to="/customer/orders" onClick={closeAll}>My Orders</NavItem>
+          <NavItem to="/customer/orders" onClick={closeAll}>{t("nav.myOrders")}</NavItem>
         )}
 
         {isStaff && (
-          <NavItem to="/staff" onClick={closeAll}>Kitchen</NavItem>
+          <NavItem to="/staff" onClick={closeAll}>{t("nav.kitchen")}</NavItem>
         )}
 
         {isManager && (
@@ -103,27 +105,27 @@ function Navbar() {
               aria-expanded={managerOpen}
               onClick={() => setManagerOpen((o) => !o)}
             >
-              Manager ▾
+              {t("nav.manager")} ▾
             </button>
             {managerOpen && (
               <div className="nav-dropdown-menu" role="menu">
                 <NavLink to="/manager" className="nav-dropdown-item" onClick={closeAll}>
-                  Dashboard
+                  {t("nav.dashboard")}
                 </NavLink>
                 <NavLink to="/manager/menu" className="nav-dropdown-item" onClick={closeAll}>
-                  Menu Admin
+                  {t("nav.menuAdmin")}
                 </NavLink>
                 <NavLink to="/manager/rooms" className="nav-dropdown-item" onClick={closeAll}>
-                  Rooms
+                  {t("nav.rooms")}
                 </NavLink>
                 <NavLink to="/manager/ingredients" className="nav-dropdown-item" onClick={closeAll}>
-                  Raw Ingredients
+                  {t("nav.rawIngredients")}
                 </NavLink>
                 <NavLink to="/manager/prepared" className="nav-dropdown-item" onClick={closeAll}>
-                  Prepared Ingredients
+                  {t("nav.preparedIngredients")}
                 </NavLink>
                 <NavLink to="/manager/recipes" className="nav-dropdown-item" onClick={closeAll}>
-                  Food Item Recipes
+                  {t("nav.recipes")}
                 </NavLink>
               </div>
             )}
@@ -131,7 +133,7 @@ function Navbar() {
         )}
 
         {user?.role === "admin" && (
-          <NavItem to="/admin/users" onClick={closeAll}>Users</NavItem>
+          <NavItem to="/admin/users" onClick={closeAll}>{t("nav.users")}</NavItem>
         )}
       </nav>
 
@@ -139,7 +141,7 @@ function Navbar() {
         <NavLink
           to="/customer/cart"
           className={({ isActive }) => `cart-link${isActive ? " active" : ""}`}
-          aria-label={`Cart with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
+          aria-label={t("nav.cartAria", { count: cartCount })}
           onClick={closeAll}
         >
           <span aria-hidden="true" className="cart-icon">🛒</span>
@@ -166,25 +168,25 @@ function Navbar() {
             {userOpen && (
               <div className="nav-dropdown-menu right" role="menu">
                 <NavLink to="/profile" className="nav-dropdown-item" onClick={closeAll}>
-                  Profile
+                  {t("nav.profile")}
                 </NavLink>
                 <NavLink to="/customer/orders" className="nav-dropdown-item" onClick={closeAll}>
-                  My Orders
+                  {t("nav.myOrders")}
                 </NavLink>
                 <button
                   type="button"
                   className="nav-dropdown-item danger"
                   onClick={handleLogout}
                 >
-                  Sign out
+                  {t("nav.signOut")}
                 </button>
               </div>
             )}
           </div>
         ) : (
           <>
-            <NavItem to="/login" onClick={closeAll}>Login</NavItem>
-            <NavItem to="/signup" onClick={closeAll}>Signup</NavItem>
+            <NavItem to="/login" onClick={closeAll}>{t("nav.login")}</NavItem>
+            <NavItem to="/signup" onClick={closeAll}>{t("nav.signup")}</NavItem>
           </>
         )}
       </div>
