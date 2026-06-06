@@ -7,7 +7,6 @@ import {
 
 import { DEFAULT_PROVIDER_ID } from "../../config/providerConfig";
 import Navbar from "../../components/Navbar";
-import { demoOrders } from "../../data/demoData";
 
 const getTimeAgo = (seconds) => {
   const diff = Math.floor(Date.now() / 1000 - seconds);
@@ -19,7 +18,7 @@ const getTimeAgo = (seconds) => {
 };
 
 function OrdersPage() {
-  const [orders, setOrders] = useState(demoOrders);
+  const [orders, setOrders] = useState([]);
   const [, setClock] = useState(Date.now());
 
   const audioRef = useRef(null);
@@ -80,7 +79,7 @@ function OrdersPage() {
 
         prevOrderIdsRef.current = new Set(sorted.map((o) => o.id));
 
-        setOrders(sorted.length > 0 ? sorted : demoOrders);
+        setOrders(sorted);
       },
       DEFAULT_PROVIDER_ID // ✅ FIXED: provider scope added
     );
@@ -175,7 +174,6 @@ function OrdersPage() {
           <div>
             <p className="eyebrow">Prep-line operations</p>
             <h1>Kitchen Orders</h1>
-            <p className="muted">Move each order through the status flow described in the deck.</p>
           </div>
           <span className="pill">{orders.length} active</span>
         </div>

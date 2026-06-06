@@ -5,7 +5,6 @@ import { useCart } from "../../context/CartContext";
 import { useToast } from "../../context/ToastContext";
 import Navbar from "../../components/Navbar";
 import SearchBar from "../../components/SearchBar";
-import { demoMenuItems } from "../../data/demoData";
 
 const SORT_OPTIONS = [
   { value: "default", label: "Sort: Featured" },
@@ -15,7 +14,7 @@ const SORT_OPTIONS = [
 ];
 
 function MenuPage() {
-  const [menuItems, setMenuItems] = useState(demoMenuItems);
+  const [menuItems, setMenuItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
@@ -32,12 +31,10 @@ function MenuPage() {
           (item) => item.available === true
         );
 
-        if (availableItems.length > 0) {
-          setMenuItems(availableItems);
-        }
+        setMenuItems(availableItems);
       } catch (error) {
         console.error("Error loading menu:", error);
-        setMenuItems(demoMenuItems);
+        setMenuItems([]);
       }
     };
 
@@ -79,7 +76,6 @@ function MenuPage() {
           <div>
             <p className="eyebrow">Food and beverage</p>
             <h1>Menu</h1>
-            <p className="muted">Availability, submenu grouping, prep-line assignment, and price are visible at order time.</p>
           </div>
         </div>
 
@@ -140,16 +136,6 @@ function MenuPage() {
               <div className="empty-state">No matching menu items found.</div>
             )}
           </section>
-
-          <aside className="card cart-summary">
-            <span className="pill">Order model</span>
-            <h3>Designed for table and pickup orders</h3>
-            <p className="muted">
-              The deck calls for menu items with submenu, prep-line, availability, price, tax,
-              and inventory recipe references. This MVP exposes the fields customers and staff
-              need first.
-            </p>
-          </aside>
         </div>
       </main>
     </>

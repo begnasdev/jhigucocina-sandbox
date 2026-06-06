@@ -67,9 +67,6 @@ function RawIngredientsPage() {
           <div>
             <p className="eyebrow">Provider data</p>
             <h1>Raw Ingredients</h1>
-            <p className="muted">
-              The atomic ingredients used to build prepared ingredients and food item recipes.
-            </p>
           </div>
           <button className="button" onClick={startNew} disabled={editingId === "__new__"}>
             Add Raw Ingredient

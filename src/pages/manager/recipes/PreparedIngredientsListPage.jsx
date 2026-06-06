@@ -32,9 +32,6 @@ function PreparedIngredientsListPage() {
           <div>
             <p className="eyebrow">Provider data</p>
             <h1>Manage Prepared Ingredients</h1>
-            <p className="muted">
-              Multi-ingredient builds the kitchen prepares ahead of service (sauces, marinades, doughs).
-            </p>
           </div>
           <Link className="button" to="/manager/prepared/new">
             Add New Prepared Ingredient

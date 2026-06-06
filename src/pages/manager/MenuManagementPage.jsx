@@ -7,10 +7,9 @@ import {
   toggleMenuAvailability,
 } from "../../services/menuService";
 import Navbar from "../../components/Navbar";
-import { demoMenuItems } from "../../data/demoData";
 
 function MenuManagementPage() {
-  const [items, setItems] = useState(demoMenuItems);
+  const [items, setItems] = useState([]);
 
   const [name, setName] = useState("");
   const [description, setDescription] =
@@ -26,12 +25,10 @@ function MenuManagementPage() {
   const loadMenu = async () => {
     try {
       const data = await getMenuItems();
-      if (data.length > 0) {
-        setItems(data);
-      }
+      setItems(data);
     } catch (error) {
       console.error(error);
-      setItems(demoMenuItems);
+      setItems([]);
     }
   };
 
@@ -108,7 +105,6 @@ function MenuManagementPage() {
           <div>
             <p className="eyebrow">Menu administration</p>
             <h1>Menu Management</h1>
-            <p className="muted">Create items, group by submenu, price them, and control customer visibility.</p>
           </div>
         </div>
 
@@ -156,16 +152,6 @@ function MenuManagementPage() {
               </button>
             </div>
           </section>
-
-          <aside className="card">
-            <span className="pill warning">Menu fields</span>
-            <h3>Deck alignment</h3>
-            <p className="muted">
-              Required fields from the design include active, available, display rank,
-              item type, prep-line, price, submenu, and tax. This screen starts with
-              the customer-critical fields and keeps room for the next layer.
-            </p>
-          </aside>
         </div>
 
         <section className="section">

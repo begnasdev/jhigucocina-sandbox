@@ -1,12 +1,27 @@
 import Navbar from "../../components/Navbar";
 import SearchBar from "../../components/SearchBar";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { demoMenuItems } from "../../data/demoData";
+import { useEffect, useState } from "react";
+import { getMenuItems } from "../../services/menuService";
 
 function HomePage() {
   const [search, setSearch] = useState("");
-  const featuredItems = demoMenuItems.slice(0, 3);
+  const [featuredItems, setFeaturedItems] = useState([]);
+
+  useEffect(() => {
+    const loadFeatured = async () => {
+      try {
+        const items = await getMenuItems();
+        const availableItems = items.filter((item) => item.available === true);
+        setFeaturedItems(availableItems.slice(0, 3));
+      } catch (error) {
+        console.error("Error loading featured items:", error);
+        setFeaturedItems([]);
+      }
+    };
+
+    loadFeatured();
+  }, []);
 
   return (
     <>
@@ -17,10 +32,6 @@ function HomePage() {
           <div className="hero-copy">
             <p className="eyebrow">Provider ordering platform</p>
             <h1>Jhigu Cocina</h1>
-            <p className="lede">
-              Browse the house menu, build an order, and give the kitchen a clean
-              status workflow from placed to ready.
-            </p>
 
             <div className="search-panel">
               <SearchBar value={search} onChange={setSearch} />
@@ -44,7 +55,6 @@ function HomePage() {
             <div>
               <p className="eyebrow">Today at the counter</p>
               <h2>Popular picks</h2>
-              <p className="muted">Menu cards stay readable for dine-in, pickup, and kitchen handoff.</p>
             </div>
             <Link className="button ghost" to="/menu">Full Menu</Link>
           </div>
@@ -58,32 +68,16 @@ function HomePage() {
                   <p className="muted">{item.description}</p>
                 </div>
                 <div className="food-meta">
-                  <span className="price">${item.price.toFixed(2)}</span>
+                  <span className="price">${Number(item.price || 0).toFixed(2)}</span>
                   <span className="muted">{item.prepLine}</span>
                 </div>
               </article>
             ))}
           </div>
-        </section>
 
-        <section className="section">
-          <div className="grid cards">
-            <div className="card">
-              <span className="pill">Customer</span>
-              <h3>Search, select, order</h3>
-              <p className="muted">The customer flow matches the deck: search for food, choose a provider menu, then checkout.</p>
-            </div>
-            <div className="card">
-              <span className="pill warning">Kitchen</span>
-              <h3>Accept and prepare</h3>
-              <p className="muted">Staff can move orders through placed, accepted, preparing, ready, and completed states.</p>
-            </div>
-            <div className="card">
-              <span className="pill">Manager</span>
-              <h3>Operate the provider</h3>
-              <p className="muted">Managers get live metrics and menu controls without changing the current Firebase model.</p>
-            </div>
-          </div>
+          {featuredItems.length === 0 && (
+            <div className="empty-state">No menu items available yet.</div>
+          )}
         </section>
       </main>
     </>

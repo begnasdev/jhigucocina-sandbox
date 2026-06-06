@@ -3,10 +3,10 @@ import Navbar from "../../components/Navbar";
 import { useAuth } from "../../context/AuthContext";
 
 import {
-  subscribeToUserOrders,
+  getUserOrders,
   getUserOrderHistory,
+  ORDER_FLOW,
 } from "../../services/orderService";
-import { demoOrders, orderStatuses } from "../../data/demoData";
 
 const getTimeAgo = (seconds) => {
   const diff = Math.floor(Date.now() / 1000 - seconds);
@@ -36,14 +36,31 @@ function MyOrdersPage() {
   useEffect(() => {
     if (!user) return;
 
-    const unsubscribe = subscribeToUserOrders(user.uid, async (orders) => {
-      setActiveOrders(orders.length > 0 ? orders : demoOrders);
-      const history = await getUserOrderHistory(user.uid);
-      setHistoryOrders(history);
-      setLoading(false);
-    });
+    let isMounted = true;
+    setLoading(true);
 
-    return () => unsubscribe();
+    const loadOrders = async () => {
+      try {
+        const [orders, history] = await Promise.all([
+          getUserOrders(user.uid),
+          getUserOrderHistory(user.uid),
+        ]);
+
+        if (!isMounted) return;
+        setActiveOrders(orders);
+        setHistoryOrders(history);
+      } catch (err) {
+        console.error("Failed to load orders:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   if (!user) {
@@ -66,7 +83,6 @@ function MyOrdersPage() {
           <div>
             <p className="eyebrow">Customer order tracking</p>
             <h1>My Orders</h1>
-            <p className="muted">Follow the same status path the kitchen uses internally.</p>
           </div>
           <span className="pill">
             {activeOrders.length} active • {historyOrders.length} past
@@ -93,11 +109,11 @@ function MyOrdersPage() {
                     className="progress-steps"
                     aria-label={`Order is ${order.status}`}
                   >
-                    {orderStatuses.map((status) => (
+                    {ORDER_FLOW.map((status) => (
                       <span
                         className={`step${
-                          orderStatuses.indexOf(status) <=
-                          orderStatuses.indexOf(order.status)
+                          ORDER_FLOW.indexOf(status) <=
+                          ORDER_FLOW.indexOf(order.status)
                             ? " active"
                             : ""
                         }`}

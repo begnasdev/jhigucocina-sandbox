@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../../../components/Navbar";
 import AssignmentPanel from "./AssignmentPanel";
 import { useRecipes } from "../../../context/RecipeContext";
-import { demoMenuItems } from "../../../data/demoData";
+import { getMenuItems } from "../../../services/menuService";
 
 const EMPTY = { name: "", menuItem: "", servingSize: "24 Oz" };
 
@@ -18,6 +18,24 @@ function FoodItemRecipeEditPage() {
     addRecipe,
     updateRecipe,
   } = useRecipes();
+
+  const [menuItems, setMenuItems] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getMenuItems();
+        if (!cancelled) setMenuItems(data);
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) setMenuItems([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const existing = !isNew ? getRecipe(id) : null;
 
@@ -153,7 +171,7 @@ function FoodItemRecipeEditPage() {
                   onChange={(e) => setForm({ ...form, menuItem: e.target.value })}
                 >
                   <option value="">— Unassigned —</option>
-                  {demoMenuItems.map((m) => (
+                  {menuItems.map((m) => (
                     <option key={m.id} value={m.name}>{m.name}</option>
                   ))}
                 </select>
@@ -185,7 +203,7 @@ function FoodItemRecipeEditPage() {
                 Pick one menu item from this provider's menu. This recipe produces one serving of that item.
               </p>
               <div className="grid cards" style={{ marginTop: 14 }}>
-                {demoMenuItems.map((m) => (
+                {menuItems.map((m) => (
                   <button
                     type="button"
                     key={m.id}

@@ -42,9 +42,6 @@ function UsersPage() {
           <div>
             <p className="eyebrow">Provider administration</p>
             <h1>User Management</h1>
-            <p className="muted">
-              Promote or demote staff. Role changes take effect on the user's next session.
-            </p>
           </div>
           <span className="pill">{users.length} user{users.length === 1 ? "" : "s"}</span>
         </div>

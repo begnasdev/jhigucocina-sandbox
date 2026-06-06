@@ -46,7 +46,6 @@ function ProfilePage() {
           <div>
             <p className="eyebrow">Account</p>
             <h1>Profile</h1>
-            <p className="muted">Manage your account and quick links.</p>
           </div>
         </div>
 

@@ -30,9 +30,6 @@ function FoodItemRecipesListPage() {
           <div>
             <p className="eyebrow">Provider data</p>
             <h1>Food Item Recipes</h1>
-            <p className="muted">
-              Each recipe maps a menu item to the prepared and raw ingredients used to produce one serving.
-            </p>
           </div>
           <Link className="button" to="/manager/recipes/new">
             Add New Food Item Recipe
