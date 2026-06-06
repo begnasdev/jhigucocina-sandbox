@@ -29,6 +29,8 @@ export const getRecipes = async (
 
   return snapshot.docs.map((doc) => ({
     id: doc.id,
+    prepared: [],
+    raw: [],
     ...doc.data(),
   }));
 };
@@ -54,6 +56,8 @@ export const getRecipe = async (
 
   return {
     id: snap.id,
+    prepared: [],
+    raw: [],
     ...snap.data(),
   };
 };

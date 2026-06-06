@@ -5,6 +5,7 @@ import {
   ORDER_STATUS,
 } from "../../services/orderService";
 import Navbar from "../../components/Navbar";
+import { formatNPR } from "../../utils/format";
 
 const computeStats = (orders) => {
   const revenue = orders.reduce((t, o) => t + (o.pricing?.total || 0), 0);
@@ -83,8 +84,8 @@ function ManagerDashboard() {
           <DashboardCard title="Preparing" value={stats.preparingOrders} note="Currently in kitchen" />
           <DashboardCard title="Ready" value={stats.readyOrders} note="Waiting for pickup" />
           <DashboardCard title="Delayed" value={stats.delayedOrders} note="Over 10 minutes old" tone="warning" />
-          <DashboardCard title="Revenue" value={`$${stats.revenue.toFixed(2)}`} note="Active order value" />
-          <DashboardCard title="Avg Order" value={`$${stats.averageOrderValue.toFixed(2)}`} note="Average basket" />
+          <DashboardCard title="Revenue" value={formatNPR(stats.revenue)} note="Active order value" />
+          <DashboardCard title="Avg Order" value={formatNPR(stats.averageOrderValue)} note="Average basket" />
         </div>
 
         <section className="section">
@@ -109,7 +110,7 @@ function ManagerDashboard() {
                     </div>
                   </div>
                   <span className={`status-pill ${order.status}`}>{order.status}</span>
-                  <strong>${Number(order.pricing?.total || 0).toFixed(2)}</strong>
+                  <strong>{formatNPR(order.pricing?.total)}</strong>
                   <Link className="button ghost" to="/staff">
                     Open
                   </Link>
@@ -157,6 +158,10 @@ function ManagerDashboard() {
             <Link to="/staff" className="card">
               <span className="pill warning">Kitchen</span>
               <h3 style={{ marginTop: 10 }}>Kitchen Orders</h3>
+            </Link>
+            <Link to="/manager/rooms" className="card">
+              <span className="pill">Rooms</span>
+              <h3 style={{ marginTop: 10 }}>Room Management</h3>
             </Link>
             <Link to="/admin/users" className="card">
               <span className="pill">Team</span>

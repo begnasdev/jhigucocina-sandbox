@@ -79,7 +79,8 @@ export const createOrder = async (
   cartItems,
   cartTotal,
   customerId,
-  providerId = DEFAULT_PROVIDER_ID
+  providerId = DEFAULT_PROVIDER_ID,
+  roomContext = {}
 ) => {
   if (!customerId) {
     throw new Error("User not authenticated");
@@ -98,6 +99,9 @@ export const createOrder = async (
   const orderData = {
     providerId,
     customerId,
+
+    room: roomContext?.room ?? null,
+    floor: roomContext?.floor ?? null,
 
     items: formattedItems,
 

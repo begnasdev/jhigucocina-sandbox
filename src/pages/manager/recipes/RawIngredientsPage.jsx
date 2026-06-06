@@ -4,7 +4,7 @@ import { useRecipes } from "../../../context/RecipeContext";
 import { useConfirm } from "../../../context/ConfirmContext";
 import { useToast } from "../../../context/ToastContext";
 
-const EMPTY = { name: "", unit: "lbs", supplier: "", shelfLife: "" };
+const EMPTY = { name: "", unit: "kg", supplier: "", shelfLife: "" };
 
 function RawIngredientsPage() {
   const { rawIngredients, addRaw, updateRaw, deleteRaw } = useRecipes();
@@ -95,11 +95,11 @@ function RawIngredientsPage() {
                   value={draft.unit}
                   onChange={(e) => setDraft({ ...draft, unit: e.target.value })}
                 >
-                  <option>lbs</option>
-                  <option>Oz</option>
-                  <option>Fl. Oz</option>
-                  <option>each</option>
-                  <option>gallon</option>
+                  <option>kg</option>
+                  <option>g</option>
+                  <option>ml</option>
+                  <option>pcs</option>
+                  <option>L</option>
                 </select>
               </label>
               <label>

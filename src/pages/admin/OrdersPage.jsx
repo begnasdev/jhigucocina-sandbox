@@ -2,11 +2,13 @@ import { useEffect, useState, useRef } from "react";
 import {
   subscribeToOrders,
   updateOrderStatus,
+  getAllOrderHistory,
   ORDER_FLOW,
 } from "../../services/orderService";
 
 import { DEFAULT_PROVIDER_ID } from "../../config/providerConfig";
 import Navbar from "../../components/Navbar";
+import { formatNPR } from "../../utils/format";
 
 const getTimeAgo = (seconds) => {
   const diff = Math.floor(Date.now() / 1000 - seconds);
@@ -17,8 +19,36 @@ const getTimeAgo = (seconds) => {
   return `${Math.floor(diff / 86400)} days ago`;
 };
 
+const getPriorityLevel = (seconds) => {
+  const minutes = Math.floor((Date.now() / 1000 - seconds) / 60);
+  if (minutes >= 10) return "high";
+  if (minutes >= 5) return "medium";
+  return "fresh";
+};
+
+const PRIORITY_LABEL = {
+  high: "High priority",
+  medium: "Medium priority",
+  fresh: "Fresh",
+};
+
+const isToday = (seconds) => {
+  if (!seconds) return false;
+  const d = new Date(seconds * 1000);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+};
+
+const itemCount = (order) =>
+  (order.items || []).reduce((total, item) => total + (item.quantity || 0), 0);
+
 function OrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [history, setHistory] = useState([]);
   const [, setClock] = useState(Date.now());
 
   const audioRef = useRef(null);
@@ -94,6 +124,28 @@ function OrdersPage() {
     };
   }, [audioUnlocked]);
 
+  // COMPLETED HISTORY (polled; service unchanged)
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadHistory = async () => {
+      try {
+        const data = await getAllOrderHistory(DEFAULT_PROVIDER_ID);
+        if (!cancelled) setHistory(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadHistory();
+    const historyInterval = setInterval(loadHistory, 60000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(historyInterval);
+    };
+  }, []);
+
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus, DEFAULT_PROVIDER_ID);
@@ -107,64 +159,87 @@ function OrdersPage() {
     }
   };
 
-  const getPriorityLabel = (seconds) => {
-    const minutes = Math.floor((Date.now() / 1000 - seconds) / 60);
-    if (minutes >= 10) return "High priority";
-    if (minutes >= 5) return "Medium priority";
-    return "Fresh";
-  };
-
   const nextStatus = (status) => {
     const index = ORDER_FLOW.indexOf(status);
     return index >= 0 ? ORDER_FLOW[index + 1] : null;
   };
 
+  // COLUMN MODEL (UI grouping only — Firestore status flow unchanged)
+  const newOrders = orders.filter(
+    (o) => o.status === "placed" || o.status === "accepted"
+  );
+  const preparingOrders = orders.filter((o) => o.status === "preparing");
+  const readyOrders = orders.filter((o) => o.status === "ready");
+  const completedToday = history.filter((o) =>
+    isToday(o.timeline?.completedAt?.seconds)
+  );
+
+  const columns = [
+    { key: "new", label: "New", orders: newOrders },
+    { key: "preparing", label: "Preparing", orders: preparingOrders },
+    { key: "ready", label: "Ready", orders: readyOrders },
+    { key: "completed", label: "Completed", orders: completedToday },
+  ];
+
+  const metrics = [
+    { key: "new", label: "New Orders", value: newOrders.length },
+    { key: "preparing", label: "Preparing", value: preparingOrders.length },
+    { key: "ready", label: "Ready", value: readyOrders.length },
+    { key: "completed", label: "Completed Today", value: completedToday.length },
+  ];
+
   const renderOrderCard = (order) => {
     const next = nextStatus(order.status);
+    const placedSeconds = order.timeline?.placedAt?.seconds || 0;
+    const level = getPriorityLevel(placedSeconds);
+    const count = itemCount(order);
 
     return (
-    <div
-      key={order.id}
-      className="card food-card"
-    >
-      <div className="row">
-        <h3>Order #{order.id}</h3>
-        <span className="pill warning">{getPriorityLabel(order.timeline?.placedAt?.seconds || 0)}</span>
-      </div>
+      <article className="kds-card" key={order.id}>
+        <header className="kds-card-head">
+          <span className="kds-order-id">#{order.id}</span>
+          <span className={`kds-priority ${level}`}>{PRIORITY_LABEL[level]}</span>
+        </header>
 
-      <p>
-        <strong>Placed:</strong>{" "}
-        {order.timeline?.placedAt?.seconds
-          ? getTimeAgo(order.timeline.placedAt.seconds)
-          : "Unknown"}
-      </p>
-
-      <span className={`status-pill ${order.status}`}>{order.status}</span>
-
-      <div>
-        {order.items?.map((item, index) => (
-          <div className="row" key={`${order.id}-${index}`}>
-            <span>{item.name}</span>
-            <strong>x{item.quantity}</strong>
+        {(order.room || order.floor) && (
+          <div className="kds-room">
+            ROOM {order.room ?? "—"}
+            {order.floor ? ` · F${order.floor}` : ""}
           </div>
-        ))}
-      </div>
+        )}
 
-      <div className="row">
-        <strong>Total</strong>
-        <span className="price">${Number(order.pricing?.total || 0).toFixed(2)}</span>
-      </div>
+        <div className="kds-card-meta">
+          <span className="kds-elapsed">
+            {placedSeconds ? getTimeAgo(placedSeconds) : "Unknown"}
+          </span>
+          <span className="kds-itemcount">
+            {count} item{count === 1 ? "" : "s"}
+          </span>
+        </div>
 
-      {next && (
-        <button className="button" onClick={() => handleStatusChange(order.id, next)}>
-          Move to {next}
-        </button>
-      )}
-    </div>
+        <ul className="kds-items">
+          {(order.items || []).map((item, index) => (
+            <li className="kds-item" key={`${order.id}-${index}`}>
+              <span className="kds-item-name">{item.name}</span>
+              <span className="kds-item-qty">×{item.quantity}</span>
+            </li>
+          ))}
+        </ul>
+
+        <footer className="kds-card-foot">
+          <span className="kds-total">{formatNPR(order.pricing?.total)}</span>
+          {next && (
+            <button
+              className="button"
+              onClick={() => handleStatusChange(order.id, next)}
+            >
+              Move to {next}
+            </button>
+          )}
+        </footer>
+      </article>
     );
   };
-
-  const activeStatuses = ORDER_FLOW.filter((status) => status !== "completed");
 
   return (
     <>
@@ -178,21 +253,31 @@ function OrdersPage() {
           <span className="pill">{orders.length} active</span>
         </div>
 
-        <section className="status-board">
-          {activeStatuses.map((status) => {
-            const statusOrders = orders.filter((order) => order.status === status);
+        <section className="kds-metrics" aria-label="Kitchen metrics">
+          {metrics.map((metric) => (
+            <div className={`kds-metric kds-metric-${metric.key}`} key={metric.key}>
+              <span className="kds-metric-value">{metric.value}</span>
+              <span className="kds-metric-label">{metric.label}</span>
+            </div>
+          ))}
+        </section>
 
-            return (
-              <div className="status-column" key={status}>
-                <h2>{status} ({statusOrders.length})</h2>
-                <div className="grid">
-                  {statusOrders.length > 0 ? statusOrders.map(renderOrderCard) : (
-                    <div className="empty-state">No orders in this lane.</div>
-                  )}
-                </div>
+        <section className="kds-board">
+          {columns.map((column) => (
+            <div className={`kds-column kds-col-${column.key}`} key={column.key}>
+              <header className="kds-column-head">
+                <h2>{column.label}</h2>
+                <span className="kds-column-count">{column.orders.length}</span>
+              </header>
+              <div className="kds-column-body">
+                {column.orders.length > 0 ? (
+                  column.orders.map(renderOrderCard)
+                ) : (
+                  <div className="empty-state">No orders in this lane.</div>
+                )}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </section>
       </main>
     </>

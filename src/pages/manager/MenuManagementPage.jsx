@@ -7,9 +7,11 @@ import {
   toggleMenuAvailability,
 } from "../../services/menuService";
 import Navbar from "../../components/Navbar";
+import { formatNPR } from "../../utils/format";
 
 function MenuManagementPage() {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
   const [description, setDescription] =
@@ -23,12 +25,15 @@ function MenuManagementPage() {
   }, []);
 
   const loadMenu = async () => {
+    setLoading(true);
     try {
       const data = await getMenuItems();
       setItems(data);
     } catch (error) {
       console.error(error);
       setItems([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,7 +147,7 @@ function MenuManagementPage() {
 
               <input
                 className="form-control"
-                placeholder="Price"
+                placeholder="Price (NPR)"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
@@ -157,7 +162,14 @@ function MenuManagementPage() {
         <section className="section">
           <h2>Menu Items</h2>
 
-          {items.length === 0 ? (
+          {loading ? (
+            <div className="table-list" aria-busy="true" aria-label="Loading menu items">
+              <div className="skeleton-row" />
+              <div className="skeleton-row" />
+              <div className="skeleton-row" />
+              <div className="skeleton-row" />
+            </div>
+          ) : items.length === 0 ? (
             <div className="empty-state">No menu items found.</div>
           ) : (
             <div className="table-list">
@@ -168,7 +180,7 @@ function MenuManagementPage() {
                     <h3>{item.name}</h3>
                     <p className="muted">{item.description || "No description"}</p>
                   </div>
-                  <strong>${Number(item.price || 0).toFixed(2)}</strong>
+                  <strong>{formatNPR(item.price)}</strong>
                   <span className={`pill${item.available ? "" : " danger"}`}>
                     {item.available ? "Available" : "Unavailable"}
                   </span>

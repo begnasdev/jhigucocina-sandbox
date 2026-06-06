@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import { useAuth } from "../../context/AuthContext";
+import { formatNPR } from "../../utils/format";
 
 import {
   getUserOrders,
@@ -125,7 +126,7 @@ function MyOrdersPage() {
 
                   <div className="row">
                     <span className="muted">Total</span>
-                    <strong>${Number(order.pricing?.total || 0).toFixed(2)}</strong>
+                    <strong>{formatNPR(order.pricing?.total)}</strong>
                   </div>
                   <div className="row">
                     <span className="muted">Placed</span>
@@ -166,7 +167,7 @@ function MyOrdersPage() {
                   <h3 style={{ marginTop: 10 }}>Order #{order.id}</h3>
                   <div className="row">
                     <span className="muted">Total</span>
-                    <strong>${Number(order.pricing?.total || 0).toFixed(2)}</strong>
+                    <strong>{formatNPR(order.pricing?.total)}</strong>
                   </div>
                   <button
                     type="button"
@@ -235,7 +236,7 @@ function OrderDetailModal({ order, onClose }) {
                 <strong>{item.name}</strong>
                 <span className="muted" style={{ marginLeft: 8 }}>× {item.quantity}</span>
               </span>
-              <span>${(Number(item.price || 0) * item.quantity).toFixed(2)}</span>
+              <span>{formatNPR(Number(item.price || 0) * item.quantity)}</span>
             </div>
           )) || <p className="muted">No items recorded.</p>}
         </div>
@@ -244,7 +245,7 @@ function OrderDetailModal({ order, onClose }) {
 
         <div className="row">
           <span className="muted">Total</span>
-          <span className="price">${Number(order.pricing?.total || 0).toFixed(2)}</span>
+          <span className="price">{formatNPR(order.pricing?.total)}</span>
         </div>
 
         <h4 style={{ marginTop: 18 }}>Timeline</h4>

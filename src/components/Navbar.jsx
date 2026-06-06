@@ -4,11 +4,13 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useRoom } from "../context/RoomContext";
 import { useToast } from "../context/ToastContext";
 
 function Navbar() {
   const { cartCount } = useCart();
   const { user } = useAuth();
+  const { room, floor, hasRoom } = useRoom();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -59,6 +61,12 @@ function Navbar() {
         <span>Jhigu Cocina</span>
       </NavLink>
 
+      {hasRoom && (
+        <span className="nav-room-badge" title="Detected from QR code">
+          Room {room}{floor ? ` · Floor ${floor}` : ""}
+        </span>
+      )}
+
       <button
         className="nav-toggle"
         type="button"
@@ -104,6 +112,9 @@ function Navbar() {
                 </NavLink>
                 <NavLink to="/manager/menu" className="nav-dropdown-item" onClick={closeAll}>
                   Menu Admin
+                </NavLink>
+                <NavLink to="/manager/rooms" className="nav-dropdown-item" onClick={closeAll}>
+                  Rooms
                 </NavLink>
                 <NavLink to="/manager/ingredients" className="nav-dropdown-item" onClick={closeAll}>
                   Raw Ingredients

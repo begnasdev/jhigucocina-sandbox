@@ -3,9 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
+import { useRoom } from "../../context/RoomContext";
 import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmContext";
 import { createOrder } from "../../services/orderService";
+import { DEFAULT_PROVIDER_ID } from "../../config/providerConfig";
+import { formatNPR } from "../../utils/format";
 
 const TAX_RATE = 0.0875;
 
@@ -21,6 +24,7 @@ function CartPage() {
   } = useCart();
 
   const { user } = useAuth();
+  const { room, floor, hasRoom } = useRoom();
   const toast = useToast();
   const confirm = useConfirm();
   const navigate = useNavigate();
@@ -52,7 +56,13 @@ function CartPage() {
     }
     try {
       setSubmitting(true);
-      const orderId = await createOrder(cartItems, total, user.uid);
+      const orderId = await createOrder(
+        cartItems,
+        total,
+        user.uid,
+        DEFAULT_PROVIDER_ID,
+        { room, floor }
+      );
       clearCart();
       toast.success(`Order placed (${orderId})`);
       navigate("/customer/orders");
@@ -128,10 +138,10 @@ function CartPage() {
 
                   <div className="cart-row-price">
                     <span className="price">
-                      ${(Number(item.price || 0) * item.quantity).toFixed(2)}
+                      {formatNPR(Number(item.price || 0) * item.quantity)}
                     </span>
                     <span className="muted" style={{ fontSize: ".82rem" }}>
-                      ${Number(item.price || 0).toFixed(2)} each
+                      {formatNPR(item.price)} each
                     </span>
                   </div>
 
@@ -151,18 +161,32 @@ function CartPage() {
               <span className="pill">Order summary</span>
               <h3 style={{ marginTop: 10 }}>Review and place</h3>
 
+              {hasRoom ? (
+                <p className="room-info" style={{ marginTop: 8 }}>
+                  Delivering to <strong>Room {room}</strong>
+                  {floor ? <> · Floor {floor}</> : null}
+                </p>
+              ) : (
+                <p
+                  className="room-warning muted"
+                  style={{ marginTop: 8, fontSize: ".9rem" }}
+                >
+                  No room detected — please scan the QR code in your room.
+                </p>
+              )}
+
               <div className="row">
                 <span>Subtotal</span>
-                <strong>${cartTotal.toFixed(2)}</strong>
+                <strong>{formatNPR(cartTotal)}</strong>
               </div>
               <div className="row">
                 <span>Tax (8.75%)</span>
-                <strong>${tax.toFixed(2)}</strong>
+                <strong>{formatNPR(tax)}</strong>
               </div>
               <hr />
               <div className="row">
                 <span>Total</span>
-                <span className="price">${total.toFixed(2)}</span>
+                <span className="price">{formatNPR(total)}</span>
               </div>
 
               {!user && (
@@ -175,7 +199,7 @@ function CartPage() {
                 <button
                   className="button"
                   onClick={handleCheckout}
-                  disabled={submitting}
+                  disabled={submitting || !hasRoom}
                   style={{ width: "100%" }}
                 >
                   {submitting ? "Placing order…" : "Checkout"}

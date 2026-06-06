@@ -14,6 +14,7 @@ import OrdersPage from "../pages/admin/OrdersPage";
 
 import ManagerDashboard from "../pages/manager/ManagerDashboard";
 import MenuManagementPage from "../pages/manager/MenuManagementPage";
+import RoomManagementPage from "../pages/manager/RoomManagementPage";
 import RawIngredientsPage from "../pages/manager/recipes/RawIngredientsPage";
 import PreparedIngredientsListPage from "../pages/manager/recipes/PreparedIngredientsListPage";
 import PreparedIngredientEditPage from "../pages/manager/recipes/PreparedIngredientEditPage";
@@ -119,6 +120,17 @@ function AppRoutes() {
               ]}
             >
               <MenuManagementPage />
+            </RoleGuard>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/manager/rooms"
+        element={
+          <ProtectedRoute>
+            <RoleGuard allowedRoles={["manager", "admin"]}>
+              <RoomManagementPage />
             </RoleGuard>
           </ProtectedRoute>
         }

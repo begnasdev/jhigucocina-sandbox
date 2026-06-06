@@ -46,7 +46,7 @@ function FoodItemRecipesListPage() {
               <span className="pill">{r.menuItem || "Unassigned"}</span>
               <h3 style={{ margin: "10px 0 4px" }}>{r.name}</h3>
               <p className="muted" style={{ fontSize: ".9rem" }}>
-                Serving size: {r.servingSize || "—"} • Prepared: {r.prepared.length} • Raw: {r.raw.length}
+                Serving size: {r.servingSize || "—"} • Prepared: {r.prepared?.length ?? 0} • Raw: {r.raw?.length ?? 0}
               </p>
               <div className="actions" style={{ marginTop: 12 }}>
                 <Link className="button ghost" to={`/manager/recipes/${r.id}/edit`}>

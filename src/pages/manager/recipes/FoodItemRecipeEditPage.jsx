@@ -5,7 +5,7 @@ import AssignmentPanel from "./AssignmentPanel";
 import { useRecipes } from "../../../context/RecipeContext";
 import { getMenuItems } from "../../../services/menuService";
 
-const EMPTY = { name: "", menuItem: "", servingSize: "24 Oz" };
+const EMPTY = { name: "", menuItem: "", servingSize: "700 ml" };
 
 function FoodItemRecipeEditPage() {
   const { id } = useParams();
@@ -160,7 +160,7 @@ function FoodItemRecipeEditPage() {
                   className="form-control"
                   value={form.servingSize}
                   onChange={(e) => setForm({ ...form, servingSize: e.target.value })}
-                  placeholder="e.g. 24 Oz"
+                  placeholder="e.g. 700 ml"
                 />
               </label>
               <label>

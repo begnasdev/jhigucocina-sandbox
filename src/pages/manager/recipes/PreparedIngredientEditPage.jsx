@@ -6,7 +6,7 @@ import { useRecipes } from "../../../context/RecipeContext";
 
 const EMPTY_FORM = {
   name: "",
-  unit: "Fl. Oz",
+  unit: "ml",
   madeBy: "",
   shelfLife: "",
   prepTime: 0,
@@ -129,11 +129,11 @@ function PreparedIngredientEditPage() {
                   value={form.unit}
                   onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 >
-                  <option>Fl. Oz</option>
-                  <option>Oz</option>
-                  <option>lbs</option>
-                  <option>each</option>
-                  <option>gallon</option>
+                  <option>ml</option>
+                  <option>g</option>
+                  <option>kg</option>
+                  <option>pcs</option>
+                  <option>L</option>
                 </select>
               </label>
               <label>
