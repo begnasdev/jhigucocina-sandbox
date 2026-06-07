@@ -51,15 +51,17 @@ const PRIORITY_KEY = {
   fresh: "kds.priorityFresh",
 };
 
-const isToday = (seconds) => {
+// KDS retention: completed orders are shown for 12 hours only (UI filter).
+// Orders remain stored in orders_history and in customer history regardless.
+const KDS_HISTORY_RETENTION_MS = 12 * 60 * 60 * 1000;
+
+const isWithinRetention = (order) => {
+  const seconds =
+    order?.timeline?.completedAt?.seconds ??
+    order?.movedToHistoryAt?.seconds ??
+    null;
   if (!seconds) return false;
-  const d = new Date(seconds * 1000);
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
+  return Date.now() - seconds * 1000 <= KDS_HISTORY_RETENTION_MS;
 };
 
 const itemCount = (order) =>
@@ -308,22 +310,20 @@ function OrdersPage() {
   );
   const preparingOrders = orders.filter((o) => o.status === "preparing");
   const readyOrders = orders.filter((o) => o.status === "ready");
-  const completedToday = history.filter((o) =>
-    isToday(o.timeline?.completedAt?.seconds)
-  );
+  const recentlyCompleted = history.filter(isWithinRetention);
 
   const columns = [
     { key: "new", label: t("kds.colNew"), orders: newOrders },
     { key: "preparing", label: t("kds.colPreparing"), orders: preparingOrders },
     { key: "ready", label: t("kds.colReady"), orders: readyOrders },
-    { key: "completed", label: t("kds.colCompleted"), orders: completedToday },
+    { key: "completed", label: t("kds.colCompleted"), orders: recentlyCompleted },
   ];
 
   const metrics = [
     { key: "new", label: t("kds.metricNew"), value: newOrders.length },
     { key: "preparing", label: t("kds.metricPreparing"), value: preparingOrders.length },
     { key: "ready", label: t("kds.metricReady"), value: readyOrders.length },
-    { key: "completed", label: t("kds.metricCompleted"), value: completedToday.length },
+    { key: "completed", label: t("kds.metricCompleted"), value: recentlyCompleted.length },
   ];
 
   const renderOrderCard = (order) => {

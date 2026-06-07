@@ -2748,3 +2748,87 @@ video {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   PHASE 15 — HOW TO ORDER + DELIVERY TOGGLE (visual only)
+   ========================================================= */
+
+/* --- How To Order: connected step timeline --- */
+.howto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.howto-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 16px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.howto-step-num {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.howto-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.howto-step h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+/* --- Delivery option toggle (cart) — mirrors the language toggle --- */
+.delivery-toggle {
+  display: inline-flex;
+  width: 100%;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.delivery-toggle-btn {
+  flex: 1 1 0;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.delivery-toggle-btn.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.delivery-toggle-btn:not(.active):hover {
+  color: var(--brand-dark);
+}
+
+@media (max-width: 560px) {
+  .howto-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

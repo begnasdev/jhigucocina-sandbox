@@ -100,6 +100,32 @@ function HomePage() {
           </div>
         </section>
 
+        <section className="section howto-section">
+          <div className="section-header section-header-accent">
+            <div>
+              <p className="eyebrow">{t("howto.subtitle")}</p>
+              <h2>{t("howto.title")}</h2>
+            </div>
+          </div>
+
+          <div className="howto-grid">
+            {[
+              { icon: "📱", step: "howto.step1" },
+              { icon: "🍽️", step: "howto.step2" },
+              { icon: "🛒", step: "howto.step3" },
+              { icon: "🛵", step: "howto.step4" },
+              { icon: "✅", step: "howto.step5" },
+              { icon: "📍", step: "howto.step6" },
+            ].map((s, i) => (
+              <article className="howto-step" key={s.step}>
+                <span className="howto-step-num" aria-hidden="true">{i + 1}</span>
+                <span className="howto-icon" aria-hidden="true">{s.icon}</span>
+                <h3>{t(s.step)}</h3>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="section why-section">
           <div className="section-header section-header-accent">
             <div>

@@ -80,7 +80,8 @@ export const createOrder = async (
   cartTotal,
   customerId,
   providerId = DEFAULT_PROVIDER_ID,
-  roomContext = {}
+  roomContext = {},
+  pricingInfo = {}
 ) => {
   if (!customerId) {
     throw new Error("User not authenticated");
@@ -96,19 +97,27 @@ export const createOrder = async (
 
   const now = Date.now();
 
+  // Backward-compatible pricing: when pricingInfo is omitted (legacy call),
+  // subtotal == total and deliveryFee == 0, preserving the original shape.
+  const subtotal = pricingInfo?.subtotal ?? cartTotal;
+  const deliveryFee = pricingInfo?.deliveryFee ?? 0;
+  const deliveryType = pricingInfo?.deliveryType ?? null;
+
   const orderData = {
     providerId,
     customerId,
 
     room: roomContext?.room ?? null,
     floor: roomContext?.floor ?? null,
+    deliveryType,
 
     items: formattedItems,
 
     pricing: {
-      subtotal: cartTotal,
+      subtotal,
       tax: 0,
       discount: 0,
+      deliveryFee,
       total: cartTotal,
     },
 

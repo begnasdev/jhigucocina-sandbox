@@ -306,6 +306,12 @@ function OrderDetailModal({ order, onClose, t }) {
 
         <hr />
 
+        {order.pricing?.deliveryFee ? (
+          <div className="row">
+            <span className="muted">{t("cart.roomDeliveryFee")}</span>
+            <span>{formatNPR(order.pricing.deliveryFee)}</span>
+          </div>
+        ) : null}
         <div className="row">
           <span className="muted">{t("orders.total")}</span>
           <span className="price">{formatNPR(order.pricing?.total)}</span>

@@ -29,9 +29,12 @@ function CartPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [deliveryType, setDeliveryType] = useState("room");
 
-  // No service charge / tax — the customer pays the item subtotal only.
-  const total = cartTotal;
+  // Room delivery adds 10% of the food subtotal; pickup adds nothing.
+  const isRoomDelivery = deliveryType === "room";
+  const deliveryFee = isRoomDelivery ? cartTotal * 0.1 : 0;
+  const total = cartTotal + deliveryFee;
 
   const handleClear = async () => {
     if (cartItems.length === 0) return;
@@ -62,7 +65,8 @@ function CartPage() {
         total,
         user.uid,
         DEFAULT_PROVIDER_ID,
-        { room, floor }
+        { room, floor },
+        { subtotal: cartTotal, deliveryFee, deliveryType }
       );
       clearCart();
       toast.success(t("cart.orderPlaced", { id: orderId }));
@@ -188,10 +192,40 @@ function CartPage() {
                 </p>
               )}
 
+              <div
+                className="delivery-toggle"
+                role="group"
+                aria-label={t("cart.deliveryOption")}
+                style={{ marginTop: 12 }}
+              >
+                <button
+                  type="button"
+                  className={`delivery-toggle-btn${isRoomDelivery ? " active" : ""}`}
+                  onClick={() => setDeliveryType("room")}
+                  aria-pressed={isRoomDelivery}
+                >
+                  {t("cart.roomDelivery")}
+                </button>
+                <button
+                  type="button"
+                  className={`delivery-toggle-btn${!isRoomDelivery ? " active" : ""}`}
+                  onClick={() => setDeliveryType("pickup")}
+                  aria-pressed={!isRoomDelivery}
+                >
+                  {t("cart.pickup")}
+                </button>
+              </div>
+
               <div className="row">
                 <span>{t("cart.subtotal")}</span>
                 <strong>{formatNPR(cartTotal)}</strong>
               </div>
+              {isRoomDelivery && (
+                <div className="row">
+                  <span>{t("cart.roomDeliveryFee")}</span>
+                  <strong>{formatNPR(deliveryFee)}</strong>
+                </div>
+              )}
               <hr />
               <div className="row">
                 <span>{t("cart.total")}</span>
