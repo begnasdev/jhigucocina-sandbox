@@ -252,7 +252,7 @@ function OrderDetailModal({ order, onClose, t }) {
   const events = [
     { key: "placedAt", labelKey: "status.placed" },
     { key: "acceptedAt", labelKey: "status.accepted" },
-    { key: "preparingAt", labelKey: "status.preparing" },
+    { key: "startedPreparingAt", labelKey: "status.preparing" },
     { key: "readyAt", labelKey: "status.ready" },
     { key: "completedAt", labelKey: "status.completed" },
   ];

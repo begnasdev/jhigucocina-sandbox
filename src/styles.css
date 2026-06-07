@@ -2384,3 +2384,367 @@ video {
     font-size: 0.8rem;
   }
 }
+
+/* =========================================================
+   PHASE 11A — UI POLISH & HOMEPAGE REDESIGN (visual only)
+   ========================================================= */
+
+/* --- Hero: full-bleed, overlaid, food-forward --- */
+.hero-feature {
+  display: flex;            /* overrides the 2-col grid from .hero */
+  align-items: center;
+  position: relative;
+  min-height: clamp(440px, 62vh, 620px);
+  padding: clamp(26px, 5vw, 72px);
+  margin-top: 8px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  isolation: isolate;
+}
+
+.hero-feature .hero-visual {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  border-radius: 0;
+  box-shadow: none;
+  /* Brand fallback shows if the image is missing/fails to load,
+     so the hero never renders blank. */
+  background-color: var(--brand-dark);
+  background-image: url("./assets/hero.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform: scale(1.03);
+  z-index: 0;
+}
+
+/* Warm brand-tinted scrim: strong on the left for white-text contrast,
+   easing to near-transparent on the right so the artwork stays visible. */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(15, 79, 66, 0.90) 0%,
+      rgba(15, 79, 66, 0.62) 34%,
+      rgba(15, 79, 66, 0.28) 60%,
+      rgba(31, 37, 34, 0.08) 100%
+    ),
+    linear-gradient(0deg, rgba(31, 37, 34, 0.32), rgba(31, 37, 34, 0) 45%);
+}
+
+.hero-feature .hero-copy {
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+  max-width: 660px;
+  color: #fff;
+}
+
+.hero-feature .eyebrow {
+  color: var(--gold);
+}
+
+.hero-feature h1 {
+  color: #fff;
+  margin-bottom: 14px;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.28);
+}
+
+.hero-tagline {
+  margin: 0 0 8px;
+  max-width: 30ch;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  font-weight: 600;
+  line-height: 1.4;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Search + CTAs sit on the scrim — give the search panel a subtle lift */
+.hero-feature .search-panel .search-input,
+.hero-feature .search-panel .form-control {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.hero-feature .button.secondary {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.hero-feature .button.secondary:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* --- Card polish: consistent elevation + hover lift --- */
+.card {
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.food-card {
+  overflow: hidden;
+}
+
+.food-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(44, 35, 20, 0.12);
+}
+
+/* Image zoom-on-hover for menu/featured cards (cosmetic) */
+.food-thumb {
+  overflow: hidden;
+}
+
+.food-thumb img {
+  transition: transform 280ms ease;
+}
+
+.food-card:hover .food-thumb img {
+  transform: scale(1.05);
+}
+
+/* Category tabs: clearer affordance */
+.tab {
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.tab:hover:not(.active) {
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+/* Slightly warmer section rhythm on the homepage popular row */
+.hero-feature + .section {
+  margin-top: 40px;
+}
+
+/* --- Respect reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .food-thumb img,
+  .tab {
+    transition: none;
+  }
+  .food-card:hover {
+    transform: none;
+  }
+  .food-card:hover .food-thumb img {
+    transform: none;
+  }
+}
+
+/* --- Mobile hero: keep text readable, image as backdrop --- */
+@media (max-width: 860px) {
+  .hero-feature {
+    min-height: clamp(380px, 70vh, 520px);
+    align-items: flex-end;
+  }
+  /* The 860 rule sets .hero-visual aspect-ratio; neutralize for the
+     absolutely-positioned full-bleed variant so it fills the hero. */
+  .hero-feature .hero-visual {
+    aspect-ratio: auto;
+    inset: 0;
+  }
+  /* Content is bottom-aligned on mobile — strengthen the bottom scrim
+     so white text stays readable over a bright illustration. */
+  .hero-scrim {
+    background:
+      linear-gradient(
+        0deg,
+        rgba(15, 79, 66, 0.92) 0%,
+        rgba(15, 79, 66, 0.62) 42%,
+        rgba(31, 37, 34, 0.12) 100%
+      );
+  }
+}
+
+@media (max-width: 560px) {
+  .hero-feature {
+    padding: 22px;
+    border-radius: var(--radius);
+  }
+  .hero-feature .hero-actions {
+    width: 100%;
+  }
+  .hero-feature .hero-actions .button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* =========================================================
+   PHASE 11C — BRANDING, "WHY" SECTION, FOOTER, POLISH
+   ========================================================= */
+
+/* --- Section header decorative accent --- */
+.section-header-accent h2 {
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.section-header-accent h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 52px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand), var(--gold));
+}
+
+/* --- "Why Jhigu Cocina" feature cards --- */
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.why-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 20px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.why-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.why-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  font-size: 1.5rem;
+  background: rgba(23, 111, 91, 0.1);
+  margin-bottom: 4px;
+}
+
+.why-card h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+
+.why-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* --- Site footer --- */
+.site-footer {
+  margin-top: 56px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.site-footer-inner {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0 24px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.footer-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-brand-name {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.footer-desc {
+  margin: 12px 0 0;
+  max-width: 42ch;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-links-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.footer-links a {
+  color: var(--ink);
+  font-size: 0.95rem;
+  width: max-content;
+}
+
+.footer-links a:hover {
+  color: var(--brand-dark);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--line);
+}
+
+.footer-bottom span {
+  display: block;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 16px 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* --- Premium food-card refinement (badge + readability) --- */
+.food-card .pill {
+  align-self: flex-start;
+}
+
+.food-card h3 {
+  font-size: 1.12rem;
+  letter-spacing: -0.01em;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .site-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .why-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -11,8 +11,6 @@ import { createOrder } from "../../services/orderService";
 import { DEFAULT_PROVIDER_ID } from "../../config/providerConfig";
 import { formatNPR } from "../../utils/format";
 
-const TAX_RATE = 0.0875;
-
 function CartPage() {
   const {
     cartItems,
@@ -32,8 +30,8 @@ function CartPage() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
-  const tax = cartTotal * TAX_RATE;
-  const total = cartTotal + tax;
+  // No service charge / tax — the customer pays the item subtotal only.
+  const total = cartTotal;
 
   const handleClear = async () => {
     if (cartItems.length === 0) return;
@@ -193,10 +191,6 @@ function CartPage() {
               <div className="row">
                 <span>{t("cart.subtotal")}</span>
                 <strong>{formatNPR(cartTotal)}</strong>
-              </div>
-              <div className="row">
-                <span>{t("cart.serviceCharge")}</span>
-                <strong>{formatNPR(tax)}</strong>
               </div>
               <hr />
               <div className="row">

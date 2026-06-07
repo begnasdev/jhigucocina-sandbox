@@ -1,5 +1,6 @@
 import Navbar from "../../components/Navbar";
 import SearchBar from "../../components/SearchBar";
+import Footer from "../../components/Footer";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getMenuItems } from "../../services/menuService";
@@ -75,10 +76,14 @@ function HomePage() {
           </div>
         )}
 
-        <section className="hero">
+        <section className="hero hero-feature">
+          <div className="hero-visual" aria-hidden="true" />
+          <div className="hero-scrim" aria-hidden="true" />
+
           <div className="hero-copy">
             <p className="eyebrow">{t("home.eyebrow")}</p>
             <h1>Jhigu Cocina</h1>
+            <p className="hero-tagline">{t("home.tagline")}</p>
 
             <div className="search-panel">
               <SearchBar value={search} onChange={setSearch} />
@@ -93,12 +98,34 @@ function HomePage() {
               </Link>
             </div>
           </div>
+        </section>
 
-          <div className="hero-visual" aria-label="Jhigu Cocina plated food" />
+        <section className="section why-section">
+          <div className="section-header section-header-accent">
+            <div>
+              <p className="eyebrow">{t("why.subtitle")}</p>
+              <h2>{t("why.title")}</h2>
+            </div>
+          </div>
+
+          <div className="why-grid">
+            {[
+              { icon: "🍲", title: "why.card1Title", desc: "why.card1Desc" },
+              { icon: "🌿", title: "why.card2Title", desc: "why.card2Desc" },
+              { icon: "🛎️", title: "why.card3Title", desc: "why.card3Desc" },
+              { icon: "⚡", title: "why.card4Title", desc: "why.card4Desc" },
+            ].map((c) => (
+              <article className="why-card" key={c.title}>
+                <span className="why-icon" aria-hidden="true">{c.icon}</span>
+                <h3>{t(c.title)}</h3>
+                <p className="muted">{t(c.desc)}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="section">
-          <div className="section-header">
+          <div className="section-header section-header-accent">
             <div>
               <p className="eyebrow">{t("home.popularEyebrow")}</p>
               <h2>{t("home.popularTitle")}</h2>
@@ -143,6 +170,8 @@ function HomePage() {
           )}
         </section>
       </main>
+
+      <Footer />
     </>
   );
 }
